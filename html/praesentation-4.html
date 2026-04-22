@@ -191,63 +191,219 @@
         </div>
     </div>
 
-    <!-- Folie 14: Beispiel B – Q&A auf eigene Inhalte -->
+    <!-- Folie 14: Beispiel B – Lernstandsanalyse & individuelles Feedback -->
     <div class="slide" id="slide-2">
         <div class="slide-panel">
             <div class="header">
-                <h1>Beispiel B – Q&amp;A auf eigene Inhalte</h1>
-                <p>Gruppenaufgabe: Das Modell als Lernbegleiter nutzen</p>
+                <h1>Beispiel B – Lernstandsanalyse &amp; individuelles Feedback</h1>
+                <p>Gruppenaufgabe: Pseudonymisierte Schülerdaten &amp; Datenschutz erleben</p>
             </div>
             <div class="content">
                 <div class="task-box">
                     <strong>📋 Aufgabe</strong>
-                    Füge einen eigenen Text (z. B. Unterrichtsnotizen, Lernzettel) in den Prompt ein.
-                    Stelle dann gezielte Fragen dazu – lass das Modell nur auf Basis dieses Textes antworten.
+                    Öffne Beispiel B. Pseudonymisierte Beurteilungsnotizen werden als Kontext eingefügt.
+                    Lass das Modell individuelle Förderpläne ableiten und beobachte, wie es mit Lücken umgeht.
                 </div>
                 <div class="result-box">
                     <strong>✅ Erwartetes Ergebnis</strong>
-                    Antworten, die sich auf den bereitgestellten Text beziehen.
-                    Das Modell sollte bei Wissenslücken im Text zugeben, es nicht zu wissen.
+                    Individuelle Förderempfehlungen aus Notizen. Diskutiert: Was darf ins Modell – was nicht?
+                    Wie schützt Pseudonymisierung – und wo reicht sie nicht?
                 </div>
                 <div class="hint-box">
-                    🔍 <strong>Diskussion:</strong> Wann beantwortet das Modell Fragen aus dem Kontext –
-                    und wann erfindet es Antworten? Wie erkennt man Halluzinationen?
+                    🔒 <strong>Datenschutz:</strong> Echte Namen und Daten niemals in ein Modell eingeben – auch nicht in ein lokales.
+                    Pseudonymisierung ist Pflicht. Das Modell verlässt den Rechner nicht, aber Protokolle können gespeichert werden.icht, aber Protokolle können gespeichert werden.
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Folie 15: Beispiel C – Code & Automatisierung -->
+    <!-- Folie 15: Beispiel C – Dokumentenerstellung -->
     <div class="slide" id="slide-3">
         <div class="slide-panel">
             <div class="header">
-                <h1>Beispiel C – Code &amp; Automatisierung</h1>
-                <p>Gruppenaufgabe: KI als Coding-Assistent</p>
+                <h1>Beispiel C – Dokumentenerstellung mit personengebundenen Daten</h1>
+                <p>Gruppenaufgabe: Zeugnistexte, Elternbriefe und Beurteilungen erstellen</p>
             </div>
             <div class="content">
                 <div class="task-box">
-                    <strong>📋 Aufgabe (wähle eine):</strong>
-                    <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem; font-size: 1.9rem;">
-                        <li>Lass ein einfaches Shell-Skript oder Python-Skript schreiben</li>
-                        <li>Bitte das Modell, einen vorhandenen Code zu erklären</li>
-                        <li>Lass einen SQL-Ausdruck oder Regex-Muster generieren</li>
-                    </ul>
+                    <strong>📋 Aufgabe</strong>
+                    Öffne Beispiel C. Erstelle auf Basis anonymisierter Schülernotizen einen Zeugnistext
+                    oder Elternbrief. Nutze das zweistufige Anonymisierungsverfahren: erst pseudonymisieren,
+                    dann finalisieren.
                 </div>
                 <div class="result-box">
                     <strong>✅ Erwartetes Ergebnis</strong>
-                    Funktionsfähiger oder erklärbarer Code. Teste das Ergebnis – korrekt oder fehlerhaft?
-                    Wie hilfreich ist die Erklärung des Modells?
+                    Ein fertiger Zeugnistext oder Elternbrief, der professionell klingt.
+                    Vergleicht: Wie gut trifft das Modell den Ton? Was muss nachbearbeitet werden?
                 </div>
                 <div class="hint-box">
-                    ⚙️ <strong>Hinweis:</strong> Gib immer den Kontext mit: Programmiersprache, Zweck, Eingabe/Ausgabe-Format.
-                    Ohne Kontext → generischer Code. Mit Kontext → gezielter Code.
+                    ✏️ <strong>Hinweis:</strong> Das Modell liefert einen Entwurf – keine fertige Urkunde.
+                    Immer manuell prüfen, korrigieren und anpassen, bevor ein Dokument verwendet wird.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie D: Beispiel D – Code-Unterstützung mit Python -->
+    <div class="slide" id="slide-4">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Beispiel D – Code-Unterstützung mit Python</h1>
+                <p>Gruppenaufgabe: Ein Anonymisierungsskript iterativ entwickeln</p>
+            </div>
+            <div class="content">
+                <div class="task-box">
+                    <strong>📋 Aufgabe</strong>
+                    Öffne Beispiel D. Lass das Modell ein Python-Skript generieren, das Namen in einem Text
+                    durch Platzhalter ersetzt. Teste es, gib Fehlermeldungen zurück und verbessere es iterativ.
+                </div>
+                <div class="result-box">
+                    <strong>✅ Erwartetes Ergebnis</strong>
+                    Ein lauffähiges Python-Skript. Beobachtet: Wie gut erklärt das Modell den Code?
+                    Was passiert, wenn der erste Versuch fehlschlägt – und ihr die Fehlermeldung einsetzt?
+                </div>
+                <div class="hint-box">
+                    🐍 <strong>Voraussetzung:</strong> Python 3 muss auf dem System installiert sein.
+                    Kein Python? → Beispiel D überspringen und direkt zu E wechseln.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie E: Beispiel E – RAG -->
+    <div class="slide" id="slide-5">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Beispiel E – RAG: Fragen an eigene Dokumente</h1>
+                <p>Gruppenaufgabe: Schulunterlagen als Wissensbasis nutzen</p>
+            </div>
+            <div class="content">
+                <div class="task-box">
+                    <strong>📋 Aufgabe</strong>
+                    Öffne Beispiel E. Lade ein eigenes Dokument (z. B. Schulordnung, Lehrplan-Auszug) in
+                    Open WebUI hoch. Stelle Fragen – das Modell soll nur aus dem Dokument antworten.
+                    Teste anschließend mit einer Frage, die nicht im Dokument steht (Halluzinations-Test).
+                </div>
+                <div class="result-box">
+                    <strong>✅ Erwartetes Ergebnis</strong>
+                    Akkurate Antworten aus dem hochgeladenen Dokument. Beim Halluzinations-Test:
+                    gibt das Modell zu, es nicht zu wissen – oder erfindet es eine Antwort?
+                </div>
+                <div class="hint-box">
+                    📚 <strong>Voraussetzung:</strong> Open WebUI ≥ 0.4 mit Embedding-Modell (nomic-embed-text).
+                    RAG = Retrieval-Augmented Generation – das Modell sucht erst im Dokument, dann antwortet es.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie F: Beispiel F – MCP -->
+    <div class="slide" id="slide-6">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Beispiel F – MCP: Lokale LLMs mit Werkzeugen</h1>
+                <p>Gruppenaufgabe: Das Modell ruft echte Daten ab</p>
+            </div>
+            <div class="content">
+                <div class="task-box">
+                    <strong>📋 Aufgabe</strong>
+                    Öffne Beispiel F. Richte einen MCP-Zeitserver ein und frage das Modell nach der
+                    aktuellen Uhrzeit. Teste dann Context7 (aktuelle Bibliotheks-Dokumentation) und
+                    abschließend eine Websuche per MCP-Server.
+                </div>
+                <div class="result-box">
+                    <strong>✅ Erwartetes Ergebnis</strong>
+                    Das Modell ruft sichtbar Werkzeuge auf – im Tool-Log erkennbar.
+                    Vergleicht: Antwort mit und ohne MCP. Diskutiert: Welche Risiken entstehen,
+                    wenn ein Modell Dateien lesen oder das Web durchsuchen darf?
+                </div>
+                <div class="hint-box">
+                    🔌 <strong>Voraussetzung:</strong> Node.js ≥ 18 und Open WebUI ≥ 0.5 mit MCP-Unterstützung.
+                    MCP = Model Context Protocol – Standard von Anthropic für LLM-Werkzeug-Integration
+        </div>
+    </div>
+
+    <!-- Folie D: Beispiel D – Code-Unterstützung mit Python -->
+    <div class="slide" id="slide-4">
+        <div class="slide-panel">
+            <div class="header">7
+                <h1>Beispiel D – Code-Unterstützung mit Python</h1>
+                <p>Gruppenaufgabe: Ein Anonymisierungsskript iterativ entwickeln</p>
+            </div>
+            <div class="content">
+                <div class="task-box">
+                    <strong>📋 Aufgabe</strong>
+                    Öffne Beispiel D. Lass das Modell ein Python-Skript generieren, das Namen in einem Text
+                    durch Platzhalter ersetzt. Teste es, gib Fehlermeldungen zurück und verbessere es iterativ.
+                </div>
+                <div class="result-box">
+                    <strong>✅ Erwartetes Ergebnis</strong>
+                    Ein lauffähiges Python-Skript. Beobachtet: Wie gut erklärt das Modell den Code?
+                    Was passiert, wenn der erste Versuch fehlschlägt – und ihr die Fehlermeldung einsetzt?
+                </div>
+                <div class="hint-box">
+                    🐍 <strong>Voraussetzung:</strong> Python 3 muss auf dem System installiert sein.
+                    Kein Python? → Beispiel D überspringen und direkt zu E wechseln.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie E: Beispiel E – RAG -->
+    <div class="slide" id="slide-5">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Beispiel E – RAG: Fragen an eigene Dokumente</h1>
+                <p>Gruppenaufgabe: Schulunterlagen als Wissensbasis nutzen</p>
+            </div>
+            <div class="content">
+                <div class="task-box">
+                    <strong>📋 Aufgabe</strong>
+                    Öffne Beispiel E. Lade ein eigenes Dokument (z. B. Schulordnung, Lehrplan-Auszug) in
+                    Open WebUI hoch. Stelle Fragen – das Modell soll nur aus dem Dokument antworten.
+                    Teste anschließend mit einer Frage, die nicht im Dokument steht (Halluzinations-Test).
+                </div>
+                <div class="result-box">
+                    <strong>✅ Erwartetes Ergebnis</strong>
+                    Akkurate Antworten aus dem hochgeladenen Dokument. Beim Halluzinations-Test:
+                    gibt das Modell zu, es nicht zu wissen – oder erfindet es eine Antwort?
+                </div>
+                <div class="hint-box">
+                    📚 <strong>Voraussetzung:</strong> Open WebUI ≥ 0.4 mit Embedding-Modell (nomic-embed-text).
+                    RAG = Retrieval-Augmented Generation – das Modell sucht erst im Dokument, dann antwortet es.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie F: Beispiel F – MCP -->
+    <div class="slide" id="slide-6">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Beispiel F – MCP: Lokale LLMs mit Werkzeugen</h1>
+                <p>Gruppenaufgabe: Das Modell ruft echte Daten ab</p>
+            </div>
+            <div class="content">
+                <div class="task-box">
+                    <strong>📋 Aufgabe</strong>
+       Praxisbeispiele: Folien 0-5 (global 13-18), Abschluss: Folie 6 (global 19)
+    const localSections = [
+        null,                     // 0 Einstieg → andere Datei
+        null,                     // 1 Grundlagen → andere Datei
+        null,                     // 2 LLM & Tools → andere Datei
+        null,                     // 3 Live-Demo → andere Datei
+        { start: 0, end: 5 },     // 4 Praxisbeispiele (A–F)
+        { start: 6, end: 6
+                <div class="hint-box">
+                    🔌 <strong>Voraussetzung:</strong> Node.js ≥ 18 und Open WebUI ≥ 0.5 mit MCP-Unterstützung.
+                    MCP = Model Context Protocol – Standard von Anthropic für LLM-Werkzeug-Integration.
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Folie 16: Review & Abschluss -->
-    <div class="slide" id="slide-4">
+    <div class="slide" id="slide-7">
         <div class="slide-panel">
             <div class="header">
                 <h1>Review &amp; Abschluss</h1>
@@ -307,16 +463,14 @@
     let currentSlide = 0;
     const slides = document.querySelectorAll('.slide');
 
-    // Abschnittsgrenzen innerhalb dieser Datei (0-basiert)
-    // Praxisbeispiele: Folien 0-2 (global 13-15)
-    // Abschluss:       Folie  3   (global 16)
+    // Praxisbeispiele: Folien 0-5 (global 13-18), Abschluss: Folie 6 (global 19)
     const localSections = [
         null,                     // 0 Einstieg → andere Datei
         null,                     // 1 Grundlagen → andere Datei
         null,                     // 2 LLM & Tools → andere Datei
         null,                     // 3 Live-Demo → andere Datei
-        { start: 0, end: 2 },     // 4 Praxisbeispiele
-        { start: 3, end: 3 },     // 5 Abschluss
+        { start: 0, end: 5 },     // 4 Praxisbeispiele (A–F)
+        { start: 6, end: 6 },     // 5 Abschluss
     ];
     const sectionFiles = [
         'praesentation.html',     // 0 Einstieg
