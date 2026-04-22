@@ -166,11 +166,11 @@
 
 <div class="slide-container">
 
-    <!-- Folie 13: Beispiel A – Textzusammenfassung -->
+    <!-- Folie 1: Beispiel A – Textzusammenfassung -->
     <div class="slide active" id="slide-1">
         <div class="slide-panel">
             <div class="header">
-                <h1>Beispiel A – Textzusammenfassung</h1>
+                <h1>Beispiel A – Textzusammenfassung &amp; Strukturierung</h1>
                 <p>Gruppenaufgabe: Einen längeren Text strukturiert zusammenfassen</p>
             </div>
             <div class="content">
@@ -181,7 +181,8 @@
                 </div>
                 <div class="result-box">
                     <strong>✅ Erwartetes Ergebnis</strong>
-                    Eine verständliche, altersgerechte Zusammenfassung. Vergleiche: Wie ändert sich das Ergebnis, wenn du die Zielgruppe oder Satzanzahl änderst?
+                    Eine verständliche, altersgerechte Zusammenfassung. Vergleiche: Wie ändert sich das Ergebnis,
+                    wenn du die Zielgruppe oder Satzanzahl änderst?
                 </div>
                 <div class="hint-box">
                     💡 <strong>Tipp:</strong> Die Prompt-Formulierung steuert den Output entscheidend.
@@ -191,7 +192,7 @@
         </div>
     </div>
 
-    <!-- Folie 14: Beispiel B – Lernstandsanalyse & individuelles Feedback -->
+    <!-- Folie 2: Beispiel B – Lernstandsanalyse & individuelles Feedback -->
     <div class="slide" id="slide-2">
         <div class="slide-panel">
             <div class="header">
@@ -211,13 +212,13 @@
                 </div>
                 <div class="hint-box">
                     🔒 <strong>Datenschutz:</strong> Echte Namen und Daten niemals in ein Modell eingeben – auch nicht in ein lokales.
-                    Pseudonymisierung ist Pflicht. Das Modell verlässt den Rechner nicht, aber Protokolle können gespeichert werden.icht, aber Protokolle können gespeichert werden.
+                    Pseudonymisierung ist Pflicht. Das Modell verlässt den Rechner nicht, aber Protokolle können gespeichert werden.
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Folie 15: Beispiel C – Dokumentenerstellung -->
+    <!-- Folie 3: Beispiel C – Dokumentenerstellung -->
     <div class="slide" id="slide-3">
         <div class="slide-panel">
             <div class="header">
@@ -244,7 +245,7 @@
         </div>
     </div>
 
-    <!-- Folie D: Beispiel D – Code-Unterstützung mit Python -->
+    <!-- Folie 4: Beispiel D – Code-Unterstützung mit Python -->
     <div class="slide" id="slide-4">
         <div class="slide-panel">
             <div class="header">
@@ -270,7 +271,7 @@
         </div>
     </div>
 
-    <!-- Folie E: Beispiel E – RAG -->
+    <!-- Folie 5: Beispiel E – RAG -->
     <div class="slide" id="slide-5">
         <div class="slide-panel">
             <div class="header">
@@ -297,7 +298,7 @@
         </div>
     </div>
 
-    <!-- Folie F: Beispiel F – MCP -->
+    <!-- Folie 6: Beispiel F – MCP -->
     <div class="slide" id="slide-6">
         <div class="slide-panel">
             <div class="header">
@@ -319,90 +320,13 @@
                 </div>
                 <div class="hint-box">
                     🔌 <strong>Voraussetzung:</strong> Node.js ≥ 18 und Open WebUI ≥ 0.5 mit MCP-Unterstützung.
-                    MCP = Model Context Protocol – Standard von Anthropic für LLM-Werkzeug-Integration
-        </div>
-    </div>
-
-    <!-- Folie D: Beispiel D – Code-Unterstützung mit Python -->
-    <div class="slide" id="slide-4">
-        <div class="slide-panel">
-            <div class="header">7
-                <h1>Beispiel D – Code-Unterstützung mit Python</h1>
-                <p>Gruppenaufgabe: Ein Anonymisierungsskript iterativ entwickeln</p>
-            </div>
-            <div class="content">
-                <div class="task-box">
-                    <strong>📋 Aufgabe</strong>
-                    Öffne Beispiel D. Lass das Modell ein Python-Skript generieren, das Namen in einem Text
-                    durch Platzhalter ersetzt. Teste es, gib Fehlermeldungen zurück und verbessere es iterativ.
-                </div>
-                <div class="result-box">
-                    <strong>✅ Erwartetes Ergebnis</strong>
-                    Ein lauffähiges Python-Skript. Beobachtet: Wie gut erklärt das Modell den Code?
-                    Was passiert, wenn der erste Versuch fehlschlägt – und ihr die Fehlermeldung einsetzt?
-                </div>
-                <div class="hint-box">
-                    🐍 <strong>Voraussetzung:</strong> Python 3 muss auf dem System installiert sein.
-                    Kein Python? → Beispiel D überspringen und direkt zu E wechseln.
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Folie E: Beispiel E – RAG -->
-    <div class="slide" id="slide-5">
-        <div class="slide-panel">
-            <div class="header">
-                <h1>Beispiel E – RAG: Fragen an eigene Dokumente</h1>
-                <p>Gruppenaufgabe: Schulunterlagen als Wissensbasis nutzen</p>
-            </div>
-            <div class="content">
-                <div class="task-box">
-                    <strong>📋 Aufgabe</strong>
-                    Öffne Beispiel E. Lade ein eigenes Dokument (z. B. Schulordnung, Lehrplan-Auszug) in
-                    Open WebUI hoch. Stelle Fragen – das Modell soll nur aus dem Dokument antworten.
-                    Teste anschließend mit einer Frage, die nicht im Dokument steht (Halluzinations-Test).
-                </div>
-                <div class="result-box">
-                    <strong>✅ Erwartetes Ergebnis</strong>
-                    Akkurate Antworten aus dem hochgeladenen Dokument. Beim Halluzinations-Test:
-                    gibt das Modell zu, es nicht zu wissen – oder erfindet es eine Antwort?
-                </div>
-                <div class="hint-box">
-                    📚 <strong>Voraussetzung:</strong> Open WebUI ≥ 0.4 mit Embedding-Modell (nomic-embed-text).
-                    RAG = Retrieval-Augmented Generation – das Modell sucht erst im Dokument, dann antwortet es.
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Folie F: Beispiel F – MCP -->
-    <div class="slide" id="slide-6">
-        <div class="slide-panel">
-            <div class="header">
-                <h1>Beispiel F – MCP: Lokale LLMs mit Werkzeugen</h1>
-                <p>Gruppenaufgabe: Das Modell ruft echte Daten ab</p>
-            </div>
-            <div class="content">
-                <div class="task-box">
-                    <strong>📋 Aufgabe</strong>
-       Praxisbeispiele: Folien 0-5 (global 13-18), Abschluss: Folie 6 (global 19)
-    const localSections = [
-        null,                     // 0 Einstieg → andere Datei
-        null,                     // 1 Grundlagen → andere Datei
-        null,                     // 2 LLM & Tools → andere Datei
-        null,                     // 3 Live-Demo → andere Datei
-        { start: 0, end: 5 },     // 4 Praxisbeispiele (A–F)
-        { start: 6, end: 6
-                <div class="hint-box">
-                    🔌 <strong>Voraussetzung:</strong> Node.js ≥ 18 und Open WebUI ≥ 0.5 mit MCP-Unterstützung.
                     MCP = Model Context Protocol – Standard von Anthropic für LLM-Werkzeug-Integration.
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Folie 16: Review & Abschluss -->
+    <!-- Folie 7: Review & Abschluss -->
     <div class="slide" id="slide-7">
         <div class="slide-panel">
             <div class="header">
@@ -457,13 +381,13 @@
     <button class="slide-nav-btn" id="btn-prev" title="Zurück" onclick="navigatePrev()">◀</button>
     <button class="slide-nav-btn" id="btn-next" title="Weiter" onclick="navigateNext()">▶</button>
 </nav>
-<div class="slide-counter" id="slide-counter">1 / 1</div>
+<div class="slide-counter" id="slide-counter">1 / 7</div>
 
 <script>
     let currentSlide = 0;
     const slides = document.querySelectorAll('.slide');
 
-    // Praxisbeispiele: Folien 0-5 (global 13-18), Abschluss: Folie 6 (global 19)
+    // Praxisbeispiele: Folien 0-5 (A–F), Abschluss: Folie 6
     const localSections = [
         null,                     // 0 Einstieg → andere Datei
         null,                     // 1 Grundlagen → andere Datei
@@ -473,12 +397,12 @@
         { start: 6, end: 6 },     // 5 Abschluss
     ];
     const sectionFiles = [
-        'praesentation.html',     // 0 Einstieg
-        'praesentation-2.html',   // 1 Grundlagen
-        'praesentation-3.html',   // 2 LLM & Tools
-        'praesentation-3.html',   // 3 Live-Demo
-        null,                     // 4 Praxisbeispiele (lokal)
-        null,                     // 5 Abschluss (lokal)
+        'praesentation.html',
+        'praesentation-2.html',
+        'praesentation-3.html',
+        'praesentation-3.html',
+        null,
+        null,
     ];
 
     const legendItems = document.querySelectorAll('.legend-section');
@@ -488,7 +412,7 @@
             const s = localSections[i];
             if (s && slideIdx >= s.start) return i;
         }
-        return 4; // Fallback: Praxisbeispiele
+        return 4;
     }
 
     function updateLegend(slideIdx) {
@@ -519,7 +443,6 @@
         if (currentSlide < slides.length - 1) {
             goTo(currentSlide + 1);
         }
-        // letzte Folie: ▶ deaktiviert
     }
 
     function goToSection(idx) {
