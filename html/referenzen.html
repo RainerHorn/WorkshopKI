@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Referenzen – Lokale LLMs: Tools &amp; Modelle</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            color: #222;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 3rem 10%;
+        }
+
+        .page {
+            max-width: 100%;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+            overflow: hidden;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 2.5rem 3rem;
+            text-align: center;
+        }
+        .page-header .label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            opacity: 0.65;
+            margin-bottom: 0.5rem;
+        }
+        .page-header h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .page-header p  { font-size: 1.05rem; opacity: 0.85; max-width: 640px; margin: 0 auto; }
+
+        /* ── Body ── */
+        .page-body { padding: 3rem 3.5rem; }
+
+        /* ── Abschnitt ── */
+        h2 {
+            font-size: 1.5rem;
+            color: #1e3c72;
+            margin: 2.5rem 0 1.2rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #dde4f5;
+        }
+        h2:first-of-type { margin-top: 0; }
+
+        h3 {
+            font-size: 1.15rem;
+            color: #2a5298;
+            margin: 1.8rem 0 0.6rem 0;
+        }
+
+        /* ── Tabellen ── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.5rem 0 1.5rem 0;
+            font-size: 0.97rem;
+        }
+        thead tr { background: linear-gradient(135deg, #1e3c72, #2a5298); color: #fff; }
+        thead th { padding: 0.75rem 1rem; text-align: left; font-weight: 600; }
+        tbody tr:nth-child(even) { background: #f4f7ff; }
+        tbody tr:hover { background: #eaf0ff; }
+        tbody td { padding: 0.7rem 1rem; vertical-align: top; border-bottom: 1px solid #e8ecf5; }
+        tbody td:first-child { font-weight: 600; white-space: nowrap; }
+
+        /* ── Tags/Badges ── */
+        .badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.15rem 0.55rem;
+            border-radius: 20px;
+            margin: 0.1rem 0.15rem 0.1rem 0;
+            white-space: nowrap;
+        }
+        .b-green   { background: #dcfce7; color: #166534; }
+        .b-blue    { background: #dbeafe; color: #1e40af; }
+        .b-purple  { background: #ede9fe; color: #5b21b6; }
+        .b-yellow  { background: #fef9c3; color: #854d0e; }
+        .b-red     { background: #fee2e2; color: #991b1b; }
+        .b-gray    { background: #f1f5f9; color: #475569; }
+        .b-teal    { background: #ccfbf1; color: #0f766e; }
+
+        /* ── Info-Boxen ── */
+        .box {
+            border-radius: 10px;
+            padding: 1.3rem 1.7rem;
+            margin: 1.2rem 0;
+            line-height: 1.85;
+            font-size: 0.97rem;
+        }
+        .box-blue   { background: #eef4ff; border-left: 4px solid #2a5298; }
+        .box-green  { background: #eaf7ea; border-left: 4px solid #43a047; }
+        .box-yellow { background: #fffbea; border-left: 4px solid #f59e0b; }
+        .box strong { display: block; margin-bottom: 0.4rem; font-size: 1rem; }
+
+        /* ── Links ── */
+        a { color: #2a5298; text-decoration: none; font-weight: 600; }
+        a:hover { text-decoration: underline; }
+
+        /* ── Vergleichs-Grid ── */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.2rem;
+            margin: 0.5rem 0 1.5rem 0;
+        }
+        .card {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .card-head {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 0.9rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .card-head .icon { font-size: 1.5rem; }
+        .card-head h4 { font-size: 1rem; font-weight: 700; margin: 0; }
+        .card-head .sub { font-size: 0.8rem; opacity: 0.7; }
+        .card-body { padding: 1rem 1.2rem; font-size: 0.93rem; color: #444; }
+        .card-body ul { padding-left: 1.2rem; }
+        .card-body li { margin: 0.3rem 0; }
+        .card-footer {
+            padding: 0.6rem 1.2rem;
+            background: #f8faff;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.85rem;
+        }
+
+        hr { border: none; border-top: 2px solid #eef0f5; margin: 2.5rem 0; }
+
+        /* ── Footer ── */
+        .page-footer {
+            padding: 1.3rem 3.5rem;
+            border-top: 2px solid #eef0f5;
+            color: #aaa;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .page-footer a { color: #667eea; font-size: 0.95rem; }
+
+        @media (max-width: 620px) {
+            body { padding: 1.2rem 0.8rem; }
+            .page-body { padding: 2rem 1.5rem; }
+            .page-header { padding: 2rem 1.5rem; }
+            .page-header h1 { font-size: 1.7rem; }
+            .page-footer { padding: 1.2rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <div class="label">Workshop · Lokale LLMs in der Praxis</div>
+        <h1>Referenzen</h1>
+        <p>Gängige Tools und Modelle für den Einsatz lokaler Sprachmodelle</p>
+    </div>
+
+    <div class="page-body">
+
+        <!-- ══════════════════════════════════════════ -->
+        <h2>🛠️ Werkzeuge (Tools)</h2>
+
+        <h3>Modell-Runner – Modelle lokal ausführen</h3>
+        <div class="card-grid">
+
+            <div class="card">
+                <div class="card-head">
+                    <div class="icon">🦙</div>
+                    <div><h4>Ollama</h4><div class="sub">ollama.com</div></div>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>Einfachste Installation (ein Befehl)</li>
+                        <li>Windows, macOS, Linux</li>
+                        <li>REST-API auf Port 11434</li>
+                        <li>Sehr großes Modell-Ökosystem</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <span class="badge b-green">Empfohlen</span>
+                    <span class="badge b-blue">CLI + API</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <div class="icon">🖥️</div>
+                    <div><h4>LM Studio</h4><div class="sub">lmstudio.ai</div></div>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>Grafische Oberfläche (kein CLI nötig)</li>
+                        <li>Direktes Laden von Hugging-Face-Modellen</li>
+                        <li>Integrierter Chat &amp; OpenAI-kompatibler Server</li>
+                        <li>GPU-Beschleunigung automatisch</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <span class="badge b-green">Anfängerfreundlich</span>
+                    <span class="badge b-blue">GUI</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <div class="icon">⚡</div>
+                    <div><h4>llama.cpp</h4><div class="sub">github.com/ggml-org/llama.cpp</div></div>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>Minimalistische C++-Implementierung</li>
+                        <li>Läuft auch ohne GPU (CPU-only)</li>
+                        <li>Basis für viele andere Tools</li>
+                        <li>GGUF-Modellformat</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <span class="badge b-yellow">Fortgeschritten</span>
+                    <span class="badge b-gray">CLI</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <div class="icon">🤗</div>
+                    <div><h4>Hugging Face TGI</h4><div class="sub">huggingface.co</div></div>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>Text Generation Inference (Server)</li>
+                        <li>Produktionstauglich, skalierbar</li>
+                        <li>OpenAI-kompatibler Endpunkt</li>
+                        <li>Docker-Image verfügbar</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <span class="badge b-red">Serverbetrieb</span>
+                    <span class="badge b-blue">Docker</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <div class="icon">🔮</div>
+                    <div><h4>vLLM</h4><div class="sub">docs.vllm.ai</div></div>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>Hochperformanter Inferenz-Server</li>
+                        <li>PagedAttention für hohen Durchsatz</li>
+                        <li>OpenAI-kompatible API</li>
+                        <li>Linux / GPU erforderlich</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <span class="badge b-red">GPU-Server</span>
+                    <span class="badge b-yellow">Fortgeschritten</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <div class="icon">🤖</div>
+                    <div><h4>Jan</h4><div class="sub">jan.ai</div></div>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>Desktop-App, ähnlich wie LM Studio</li>
+                        <li>Eigene Model-Bibliothek</li>
+                        <li>Lokaler OpenAI-Server eingebaut</li>
+                        <li>Windows, macOS, Linux</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <span class="badge b-green">Anfängerfreundlich</span>
+                    <span class="badge b-blue">GUI</span>
+                </div>
+            </div>
+
+        </div>
+
+        <h3>Chat-Oberflächen – Benutzeroberfläche für Modelle</h3>
+        <div class="card-grid">
+
+            <div class="card">
+                <div class="card-head">
+                    <div class="icon">🌐</div>
+                    <div><h4>Open WebUI</h4><div class="sub">openwebui.com</div></div>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>ChatGPT-ähnliche Weboberfläche</li>
+                        <li>Verbindet sich direkt mit Ollama</li>
+                        <li>Nutzer-/Rollenverwaltung</li>
+                        <li>RAG, Bildgenerierung, Funktionen</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <span class="badge b-green">Empfohlen</span>
+                    <span class="badge b-blue">Docker</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <div class="icon">💬</div>
+                    <div><h4>Chatbox</h4><div class="sub">chatboxapp.ai</div></div>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>Desktop-Chat für lokale &amp; Cloud-APIs</li>
+                        <li>Unterstützt Ollama, OpenAI, Claude</li>
+                        <li>Markdown-Rendering, Codeblöcke</li>
+                        <li>Windows, macOS, Linux</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <span class="badge b-green">Anfängerfreundlich</span>
+                    <span class="badge b-blue">Desktop</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <div class="icon">🧠</div>
+                    <div><h4>Msty</h4><div class="sub">msty.app</div></div>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>Modernes UI, mehrere Modelle parallel</li>
+                        <li>Unterstützt Ollama und Remote-APIs</li>
+                        <li>Dokument-Upload (RAG)</li>
+                        <li>Windows &amp; macOS</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <span class="badge b-blue">Desktop</span>
+                    <span class="badge b-teal">Multi-Modell</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-head">
+                    <div class="icon">📝</div>
+                    <div><h4>AnythingLLM</h4><div class="sub">useanything.com</div></div>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>RAG-fokussiert: Dokumente als Wissensbasis</li>
+                        <li>Verbindet viele lokale &amp; Cloud-LLMs</li>
+                        <li>Teams &amp; Workspaces</li>
+                        <li>Docker oder Desktop</li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <span class="badge b-purple">RAG</span>
+                    <span class="badge b-blue">Docker / Desktop</span>
+                </div>
+            </div>
+
+        </div>
+
+        <h3>Entwickler-Tools</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Tool</th>
+                    <th>Zweck</th>
+                    <th>Besonderheit</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>LangChain</td>
+                    <td>Framework für LLM-Anwendungen (Python/JS)</td>
+                    <td>Chains, Agents, RAG-Pipelines</td>
+                </tr>
+                <tr>
+                    <td>LlamaIndex</td>
+                    <td>RAG-Framework (Dokumente indexieren)</td>
+                    <td>Starker Fokus auf Wissensbasis-Abfragen</td>
+                </tr>
+                <tr>
+                    <td>Ollama Python SDK</td>
+                    <td>Direkte Ollama-API in Python</td>
+                    <td><code>pip install ollama</code>, sehr einfach</td>
+                </tr>
+                <tr>
+                    <td>OpenAI Python SDK</td>
+                    <td>Kompatibel mit lokalen Endpunkten</td>
+                    <td><code>base_url="http://localhost:11434/v1"</code></td>
+                </tr>
+                <tr>
+                    <td>Continue (VS Code)</td>
+                    <td>KI-Coding-Assistent, lokal betrieben</td>
+                    <td>Verbindet sich mit Ollama direkt in VS Code</td>
+                </tr>
+                <tr>
+                    <td>Aider</td>
+                    <td>Terminal-basierter KI-Coding-Assistent</td>
+                    <td>Git-bewusst, arbeitet mit lokalen Modellen</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <!-- ══════════════════════════════════════════ -->
+        <h2>🤖 Sprachmodelle (LLMs)</h2>
+
+        <div class="box box-blue">
+            <strong>ℹ️ Wie werden Modelle geladen?</strong>
+            Modelle werden über Ollama mit <code>ollama pull &lt;modellname&gt;</code> geladen.
+            Die Größenangaben beziehen sich auf das GGUF-Format (quantisiert). Faustregel:
+            <strong>Modellgröße in GB ≈ RAM-Bedarf</strong>. GPU-VRAM wird bevorzugt, RAM als Fallback.
+        </div>
+
+        <h3>Allgemeine Sprachmodelle</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Modell</th>
+                    <th>Anbieter</th>
+                    <th>Größen</th>
+                    <th>Stärken</th>
+                    <th>Ollama-Befehl</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Llama 3.1 / 3.2</td>
+                    <td>Meta</td>
+                    <td>1B · 3B · 8B · 70B</td>
+                    <td>Ausgewogen, mehrsprachig, beliebt</td>
+                    <td><code>ollama pull llama3.2</code></td>
+                </tr>
+                <tr>
+                    <td>Llama 3.3</td>
+                    <td>Meta</td>
+                    <td>70B</td>
+                    <td>Sehr starke Reasoning-Fähigkeiten</td>
+                    <td><code>ollama pull llama3.3</code></td>
+                </tr>
+                <tr>
+                    <td>Mistral / Mistral-Nemo</td>
+                    <td>Mistral AI</td>
+                    <td>7B · 12B</td>
+                    <td>Schnell, Deutsch gut unterstützt</td>
+                    <td><code>ollama pull mistral-nemo</code></td>
+                </tr>
+                <tr>
+                    <td>Mixtral 8x7B</td>
+                    <td>Mistral AI</td>
+                    <td>47B (MoE)</td>
+                    <td>Mixture-of-Experts, sehr leistungsstark</td>
+                    <td><code>ollama pull mixtral</code></td>
+                </tr>
+                <tr>
+                    <td>Gemma 2 / 3</td>
+                    <td>Google</td>
+                    <td>2B · 4B · 9B · 27B</td>
+                    <td>Kompakt, gute Instruktionsfolge</td>
+                    <td><code>ollama pull gemma3</code></td>
+                </tr>
+                <tr>
+                    <td>Phi-4</td>
+                    <td>Microsoft</td>
+                    <td>3.8B · 14B</td>
+                    <td>Klein aber stark, STEM-Fokus</td>
+                    <td><code>ollama pull phi4</code></td>
+                </tr>
+                <tr>
+                    <td>Qwen 2.5</td>
+                    <td>Alibaba</td>
+                    <td>0.5B – 72B</td>
+                    <td>Ausgezeichnetes Deutsch, viele Größen</td>
+                    <td><code>ollama pull qwen2.5</code></td>
+                </tr>
+                <tr>
+                    <td>Command R+</td>
+                    <td>Cohere</td>
+                    <td>35B · 104B</td>
+                    <td>RAG-optimiert, Langkontext</td>
+                    <td><code>ollama pull command-r-plus</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Reasoning-Modelle (Schritt-für-Schritt-Denken)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Modell</th>
+                    <th>Anbieter</th>
+                    <th>Größen</th>
+                    <th>Besonderheit</th>
+                    <th>Ollama-Befehl</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>DeepSeek-R1</td>
+                    <td>DeepSeek</td>
+                    <td>1.5B – 70B</td>
+                    <td>Chain-of-Thought, offen &amp; kostenlos</td>
+                    <td><code>ollama pull deepseek-r1:8b</code></td>
+                </tr>
+                <tr>
+                    <td>QwQ-32B</td>
+                    <td>Alibaba</td>
+                    <td>32B</td>
+                    <td>Stärkstes frei verfügbares Reasoning-Modell</td>
+                    <td><code>ollama pull qwq</code></td>
+                </tr>
+                <tr>
+                    <td>Phi-4-reasoning</td>
+                    <td>Microsoft</td>
+                    <td>14B</td>
+                    <td>Kompaktes Reasoning, STEM-fokussiert</td>
+                    <td><code>ollama pull phi4-reasoning</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Code-Modelle</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Modell</th>
+                    <th>Anbieter</th>
+                    <th>Größen</th>
+                    <th>Stärken</th>
+                    <th>Ollama-Befehl</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Qwen2.5-Coder</td>
+                    <td>Alibaba</td>
+                    <td>0.5B – 32B</td>
+                    <td>Bestes lokales Code-Modell, viele Sprachen</td>
+                    <td><code>ollama pull qwen2.5-coder</code></td>
+                </tr>
+                <tr>
+                    <td>DeepSeek-Coder-V2</td>
+                    <td>DeepSeek</td>
+                    <td>16B</td>
+                    <td>Stärke: Python, Java, C++</td>
+                    <td><code>ollama pull deepseek-coder-v2</code></td>
+                </tr>
+                <tr>
+                    <td>CodeLlama</td>
+                    <td>Meta</td>
+                    <td>7B · 13B · 34B</td>
+                    <td>Klassiker, Code-Completion</td>
+                    <td><code>ollama pull codellama</code></td>
+                </tr>
+                <tr>
+                    <td>Starcoder2</td>
+                    <td>BigCode</td>
+                    <td>3B · 7B · 15B</td>
+                    <td>Open-Source, breite Sprachunterstützung</td>
+                    <td><code>ollama pull starcoder2</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Multimodale Modelle (Text + Bild)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Modell</th>
+                    <th>Anbieter</th>
+                    <th>Größen</th>
+                    <th>Fähigkeit</th>
+                    <th>Ollama-Befehl</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>LLaVA</td>
+                    <td>LLaVA-Team</td>
+                    <td>7B · 13B · 34B</td>
+                    <td>Bilder beschreiben, OCR-ähnlich</td>
+                    <td><code>ollama pull llava</code></td>
+                </tr>
+                <tr>
+                    <td>Gemma 3</td>
+                    <td>Google</td>
+                    <td>4B · 12B · 27B</td>
+                    <td>Text + Bilder, mehrsprachig</td>
+                    <td><code>ollama pull gemma3</code></td>
+                </tr>
+                <tr>
+                    <td>Qwen2.5-VL</td>
+                    <td>Alibaba</td>
+                    <td>3B · 7B · 72B</td>
+                    <td>Dokument-OCR, Screenshots analysieren</td>
+                    <td><code>ollama pull qwen2.5vl</code></td>
+                </tr>
+                <tr>
+                    <td>Llama 3.2-Vision</td>
+                    <td>Meta</td>
+                    <td>11B · 90B</td>
+                    <td>Bilder + Text, OpenAI-kompatibel</td>
+                    <td><code>ollama pull llama3.2-vision</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Deutsche Sprachmodelle</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Modell</th>
+                    <th>Anbieter</th>
+                    <th>Besonderheit</th>
+                    <th>Verfügbarkeit</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Qwen 2.5 (7B–72B)</td>
+                    <td>Alibaba</td>
+                    <td>Bestes Deutsch unter lokalen Modellen</td>
+                    <td><span class="badge b-green">Ollama</span></td>
+                </tr>
+                <tr>
+                    <td>Mistral-Nemo (12B)</td>
+                    <td>Mistral AI</td>
+                    <td>Sehr gutes Deutsch, schnell</td>
+                    <td><span class="badge b-green">Ollama</span></td>
+                </tr>
+                <tr>
+                    <td>DiscoLM German 7B</td>
+                    <td>Community</td>
+                    <td>Speziell auf Deutsch feinabgestimmt</td>
+                    <td><span class="badge b-yellow">Hugging Face</span></td>
+                </tr>
+                <tr>
+                    <td>EM German</td>
+                    <td>Community</td>
+                    <td>Deutsche Instruktionsmodelle (7B–70B)</td>
+                    <td><span class="badge b-yellow">Hugging Face / Ollama</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <!-- ══════════════════════════════════════════ -->
+        <h2>📊 Orientierung: Welches Modell wofür?</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Aufgabe</th>
+                    <th>Empfohlenes Modell</th>
+                    <th>RAM-Bedarf</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Textzusammenfassung (Deutsch)</td>
+                    <td>Qwen2.5:7b · Mistral-Nemo</td>
+                    <td>≥ 8 GB</td>
+                </tr>
+                <tr>
+                    <td>Dokumente erstellen / umformulieren</td>
+                    <td>Qwen2.5:14b · Llama3.1:8b</td>
+                    <td>≥ 10 GB</td>
+                </tr>
+                <tr>
+                    <td>Lernstandsanalyse / Feedback</td>
+                    <td>Qwen2.5:14b · Gemma3:9b</td>
+                    <td>≥ 10 GB</td>
+                </tr>
+                <tr>
+                    <td>Code schreiben (Python / JS)</td>
+                    <td>Qwen2.5-Coder:7b · DeepSeek-Coder-V2</td>
+                    <td>≥ 8 GB</td>
+                </tr>
+                <tr>
+                    <td>Mathematik / Logik</td>
+                    <td>DeepSeek-R1:8b · QwQ-32b</td>
+                    <td>≥ 8 / 24 GB</td>
+                </tr>
+                <tr>
+                    <td>Bilder analysieren / OCR</td>
+                    <td>Qwen2.5-VL:7b · LLaVA:13b</td>
+                    <td>≥ 10 GB</td>
+                </tr>
+                <tr>
+                    <td>Sehr schwache Hardware (&lt; 8 GB RAM)</td>
+                    <td>Phi-4:3.8b · Gemma3:4b · Llama3.2:3b</td>
+                    <td>4–6 GB</td>
+                </tr>
+                <tr>
+                    <td>Höchste Qualität (starke Hardware)</td>
+                    <td>Llama3.3:70b · Qwen2.5:72b · Mixtral 8x7b</td>
+                    <td>≥ 48 GB</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <!-- ══════════════════════════════════════════ -->
+        <h2>🔗 Weiterführende Links</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Ressource</th>
+                    <th>URL</th>
+                    <th>Inhalt</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Ollama Modell-Bibliothek</td>
+                    <td><a href="https://ollama.com/library" target="_blank">ollama.com/library</a></td>
+                    <td>Alle direkt installierbaren Modelle</td>
+                </tr>
+                <tr>
+                    <td>Hugging Face</td>
+                    <td><a href="https://huggingface.co/models" target="_blank">huggingface.co/models</a></td>
+                    <td>Größte Modell-Datenbank überhaupt</td>
+                </tr>
+                <tr>
+                    <td>Open WebUI Docs</td>
+                    <td><a href="https://docs.openwebui.com" target="_blank">docs.openwebui.com</a></td>
+                    <td>Installation, Funktionen, RAG</td>
+                </tr>
+                <tr>
+                    <td>LM Studio</td>
+                    <td><a href="https://lmstudio.ai" target="_blank">lmstudio.ai</a></td>
+                    <td>Download &amp; Dokumentation</td>
+                </tr>
+                <tr>
+                    <td>LMSYS Chatbot Arena</td>
+                    <td><a href="https://lmarena.ai" target="_blank">lmarena.ai</a></td>
+                    <td>Modell-Rangliste (Benchmark)</td>
+                </tr>
+                <tr>
+                    <td>Open LLM Leaderboard</td>
+                    <td><a href="https://huggingface.co/spaces/open-llm-leaderboard/open_llm_leaderboard" target="_blank">HF Open LLM Leaderboard</a></td>
+                    <td>Vergleich offener Modelle nach Aufgaben</td>
+                </tr>
+                <tr>
+                    <td>PrivacyLens (BSI)</td>
+                    <td><a href="https://www.bsi.bund.de" target="_blank">bsi.bund.de</a></td>
+                    <td>Datenschutz &amp; KI-Orientierungshilfe</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="box box-yellow">
+            <strong>⚠️ Stand der Informationen</strong>
+            Die KI-Landschaft entwickelt sich sehr schnell. Modell-Empfehlungen und Tool-Versionen
+            können sich innerhalb weniger Monate ändern. Prüfen Sie aktuelle Rankings auf
+            <a href="https://lmarena.ai" target="_blank">lmarena.ai</a> und der
+            <a href="https://huggingface.co/spaces/open-llm-leaderboard/open_llm_leaderboard" target="_blank">Open LLM Leaderboard</a>.
+        </div>
+
+    </div><!-- /page-body -->
+
+    <div class="page-footer">
+        <a href="aufgaben.html">← Zurück zu den Aufgaben</a>
+        <span>Workshop „Lokale LLMs in der Praxis" · Berufsbildende Schulen</span>
+    </div>
+
+</div><!-- /page -->
+</body>
+</html>

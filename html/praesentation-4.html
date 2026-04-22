@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshop: Lokale LLMs – Praxis &amp; Abschluss</title>
+    <link rel="stylesheet" href="../Templates/styles.css">
+    <style>
+        html, body { height: 100%; overflow: hidden; margin: 0; padding: 0; }
+        html { font-size: 90%; }
+
+        /* ── Progress-Legende ── */
+        #legend {
+            position: fixed; top: 0; left: 0; right: 0; height: 2.8rem;
+            display: flex; align-items: stretch; z-index: 500;
+            background: rgba(15,30,70,0.55); backdrop-filter: blur(6px);
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+        .legend-section {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            gap: 0.35rem; font-family: 'Segoe UI', sans-serif;
+            font-size: clamp(0.65rem, 1.1vw, 0.8rem); color: rgba(255,255,255,0.45);
+            cursor: pointer; padding: 0 0.4rem;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            transition: background 0.2s, color 0.2s; user-select: none; white-space: nowrap;
+            position: relative;
+        }
+        .legend-section:last-child { border-right: none; }
+        .legend-section:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+        .legend-section.active { background: rgba(255,255,255,0.15); color: white; font-weight: 600; }
+        .legend-section .legend-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: rgba(255,255,255,0.3); flex-shrink: 0; transition: background 0.2s;
+        }
+        .legend-section.active .legend-dot { background: #90caf9; }
+        .legend-section.active::after {
+            content: ''; position: absolute; bottom: 0; height: 2px; width: 100%;
+            background: linear-gradient(90deg, #667eea, #90caf9);
+        }
+
+        /* ── Slide Container ── */
+        .slide-container {
+            width: 100vw; height: 100vh; position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .slide {
+            position: absolute; inset: 0; display: none; flex-direction: column;
+            padding: 3.8rem 3rem 2.5rem 3rem; box-sizing: border-box; overflow: hidden;
+        }
+        .slide.active { display: flex; }
+
+        /* ── Panel ── */
+        .slide-panel {
+            background: white; border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden; flex: 1; display: flex; flex-direction: column;
+        }
+        .slide-panel .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white; padding: 1.2rem 2rem; flex-shrink: 0;
+        }
+        .slide-panel .header h1 { font-size: 1.8rem; margin: 0 0 0.2rem 0; font-weight: 700; }
+        .slide-panel .header p { font-size: 1rem; opacity: 0.85; margin: 0; }
+        .slide-panel .content {
+            padding: 1.5rem 2rem; overflow: hidden; flex: 1;
+            display: flex; flex-direction: column; gap: 1rem;
+        }
+
+        /* ── Aufgaben-Layout ── */
+        .task-box {
+            background: linear-gradient(135deg, #e8f5e9, #d4f1d4);
+            border-left: 5px solid #4caf50;
+            border-radius: 10px; padding: 1.1rem 1.4rem; font-size: 1.9rem; color: #1b5e20;
+        }
+        .task-box strong { display: block; font-size: 2rem; margin-bottom: 0.4rem; color: #2e7d32; }
+
+        .result-box {
+            background: linear-gradient(135deg, #fff8e1, #fdeaa7);
+            border-left: 5px solid #f39c12;
+            border-radius: 10px; padding: 1.1rem 1.4rem; font-size: 1.9rem; color: #7d5a00;
+        }
+        .result-box strong { display: block; font-size: 2rem; margin-bottom: 0.4rem; color: #b7770d; }
+
+        .hint-box {
+            background: #eff6ff; border-left: 5px solid #3b82f6;
+            border-radius: 10px; padding: 1rem 1.4rem; font-size: 1.9rem; color: #1e40af;
+            margin-top: auto;
+        }
+
+        /* ── Abschluss-Kacheln ── */
+        .abschluss-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; flex: 1; }
+        .abschluss-card {
+            border-radius: 12px; padding: 1.2rem 1.4rem;
+            display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .abschluss-card h4 { font-size: 2rem; font-weight: 700; margin: 0; }
+        .abschluss-card ul { margin: 0; padding-left: 1.5rem; font-size: 1.9rem; line-height: 1.5; }
+        .abschluss-card ul li { margin: 0.3rem 0; }
+        .abschluss-card.green { background: #f0fdf4; border-left: 4px solid #4caf50; }
+        .abschluss-card.green h4 { color: #15803d; }
+        .abschluss-card.blue { background: #eff6ff; border-left: 4px solid #3b82f6; }
+        .abschluss-card.blue h4 { color: #1d4ed8; }
+        .abschluss-card.purple { background: #fdf4ff; border-left: 4px solid #a855f7; }
+        .abschluss-card.purple h4 { color: #7e22ce; }
+        .abschluss-card.orange { background: #fffbeb; border-left: 4px solid #f59e0b; }
+        .abschluss-card.orange h4 { color: #92400e; }
+
+        .abschluss-intro {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-left: 4px solid #667eea; border-radius: 8px;
+            padding: 0.8rem 1rem; font-size: 1.9rem; color: #333;
+        }
+
+        /* ── Navigation ── */
+        .slide-nav {
+            position: fixed; bottom: 1.2rem; right: 1.5rem;
+            display: flex; align-items: center; gap: 0.6rem; z-index: 1000;
+        }
+        .slide-nav-btn {
+            background: linear-gradient(135deg, #1e3c72, #2a5298); color: white;
+            border: none; border-radius: 50%; width: 48px; height: 48px;
+            font-size: 1.3rem; cursor: pointer; box-shadow: 0 4px 15px rgba(30,60,114,0.5);
+            transition: box-shadow 0.2s, transform 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .slide-nav-btn:hover { box-shadow: 0 6px 20px rgba(30,60,114,0.7); transform: translateY(-2px); }
+        .slide-nav-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+        .slide-counter {
+            position: fixed; bottom: 1.4rem; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.85); font-size: 0.95rem;
+            font-family: 'Segoe UI', sans-serif; letter-spacing: 0.05em;
+        }
+        .home-link {
+            position: fixed; top: 1rem; left: 1.2rem; color: rgba(255,255,255,0.7);
+            font-family: 'Segoe UI', sans-serif; font-size: 0.9rem; text-decoration: none;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 8px; padding: 0.35rem 0.8rem; transition: background 0.2s; z-index: 1000;
+        }
+        .home-link:hover { background: rgba(255,255,255,0.2); color: white; }
+    </style>
+</head>
+<body>
+
+<a href="index.html" class="home-link">← Übersicht</a>
+
+<nav id="legend">
+    <div class="legend-section" data-section="0" onclick="goToSection(0)">
+        <span class="legend-dot"></span> Einstieg
+    </div>
+    <div class="legend-section" data-section="1" onclick="goToSection(1)">
+        <span class="legend-dot"></span> Grundlagen
+    </div>
+    <div class="legend-section" data-section="2" onclick="goToSection(2)">
+        <span class="legend-dot"></span> LLM &amp; Tools
+    </div>
+    <div class="legend-section" data-section="3" onclick="goToSection(3)">
+        <span class="legend-dot"></span> Live-Demo
+    </div>
+    <div class="legend-section active" data-section="4" onclick="goToSection(4)">
+        <span class="legend-dot"></span> Praxisbeispiele
+    </div>
+    <div class="legend-section" data-section="5" onclick="goToSection(5)">
+        <span class="legend-dot"></span> Abschluss
+    </div>
+</nav>
+
+<div class="slide-container">
+
+    <!-- Folie 13: Beispiel A – Textzusammenfassung -->
+    <div class="slide active" id="slide-1">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Beispiel A – Textzusammenfassung</h1>
+                <p>Gruppenaufgabe: Einen längeren Text strukturiert zusammenfassen</p>
+            </div>
+            <div class="content">
+                <div class="task-box">
+                    <strong>📋 Aufgabe</strong>
+                    Kopiere einen Absatz aus einem Fachtext oder einem Schulbuch in den Chat.
+                    Bitte das Modell, eine Zusammenfassung in 3 Sätzen zu erstellen – für Schüler*innen der Klasse 10.
+                </div>
+                <div class="result-box">
+                    <strong>✅ Erwartetes Ergebnis</strong>
+                    Eine verständliche, altersgerechte Zusammenfassung. Vergleiche: Wie ändert sich das Ergebnis, wenn du die Zielgruppe oder Satzanzahl änderst?
+                </div>
+                <div class="hint-box">
+                    💡 <strong>Tipp:</strong> Die Prompt-Formulierung steuert den Output entscheidend.
+                    Probiere: „Fasse in 3 Stichpunkten zusammen" vs. „Schreibe einen zusammenhängenden Absatz".
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie 14: Beispiel B – Q&A auf eigene Inhalte -->
+    <div class="slide" id="slide-2">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Beispiel B – Q&amp;A auf eigene Inhalte</h1>
+                <p>Gruppenaufgabe: Das Modell als Lernbegleiter nutzen</p>
+            </div>
+            <div class="content">
+                <div class="task-box">
+                    <strong>📋 Aufgabe</strong>
+                    Füge einen eigenen Text (z. B. Unterrichtsnotizen, Lernzettel) in den Prompt ein.
+                    Stelle dann gezielte Fragen dazu – lass das Modell nur auf Basis dieses Textes antworten.
+                </div>
+                <div class="result-box">
+                    <strong>✅ Erwartetes Ergebnis</strong>
+                    Antworten, die sich auf den bereitgestellten Text beziehen.
+                    Das Modell sollte bei Wissenslücken im Text zugeben, es nicht zu wissen.
+                </div>
+                <div class="hint-box">
+                    🔍 <strong>Diskussion:</strong> Wann beantwortet das Modell Fragen aus dem Kontext –
+                    und wann erfindet es Antworten? Wie erkennt man Halluzinationen?
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie 15: Beispiel C – Code & Automatisierung -->
+    <div class="slide" id="slide-3">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Beispiel C – Code &amp; Automatisierung</h1>
+                <p>Gruppenaufgabe: KI als Coding-Assistent</p>
+            </div>
+            <div class="content">
+                <div class="task-box">
+                    <strong>📋 Aufgabe (wähle eine):</strong>
+                    <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem; font-size: 1.9rem;">
+                        <li>Lass ein einfaches Shell-Skript oder Python-Skript schreiben</li>
+                        <li>Bitte das Modell, einen vorhandenen Code zu erklären</li>
+                        <li>Lass einen SQL-Ausdruck oder Regex-Muster generieren</li>
+                    </ul>
+                </div>
+                <div class="result-box">
+                    <strong>✅ Erwartetes Ergebnis</strong>
+                    Funktionsfähiger oder erklärbarer Code. Teste das Ergebnis – korrekt oder fehlerhaft?
+                    Wie hilfreich ist die Erklärung des Modells?
+                </div>
+                <div class="hint-box">
+                    ⚙️ <strong>Hinweis:</strong> Gib immer den Kontext mit: Programmiersprache, Zweck, Eingabe/Ausgabe-Format.
+                    Ohne Kontext → generischer Code. Mit Kontext → gezielter Code.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie 16: Review & Abschluss -->
+    <div class="slide" id="slide-4">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Review &amp; Abschluss</h1>
+                <p>Was bleibt – und wie geht es weiter?</p>
+            </div>
+            <div class="content">
+                <div class="abschluss-intro">
+                    Kurze Ergebnisrunde: Was hat geklappt? Was hat überrascht? Wo lagen die Grenzen?
+                </div>
+                <div class="abschluss-grid">
+                    <div class="abschluss-card green">
+                        <h4>✅ Best Practices</h4>
+                        <ul>
+                            <li>Rolle + Aufgabe + Format angeben</li>
+                            <li>Kontext immer mitliefern</li>
+                            <li>Ergebnis kritisch prüfen</li>
+                        </ul>
+                    </div>
+                    <div class="abschluss-card blue">
+                        <h4>🚀 Nächste Schritte</h4>
+                        <ul>
+                            <li>Ollama + Open WebUI lokal einrichten</li>
+                            <li>Modelle ausprobieren: llama3.2, mistral</li>
+                            <li>Prompt-Sammlung für eigene Fächer aufbauen</li>
+                        </ul>
+                    </div>
+                    <div class="abschluss-card purple">
+                        <h4>📄 Prompt-Cheatsheet</h4>
+                        <ul>
+                            <li>Vorlage: Rolle · Aufgabe · Format · Beispiel</li>
+                            <li>Wird als Handout bereitgestellt</li>
+                            <li>QR-Code zu Materialien am Ende</li>
+                        </ul>
+                    </div>
+                    <div class="abschluss-card orange">
+                        <h4>💬 Offene Fragen</h4>
+                        <ul>
+                            <li>Welche Fächer / Szenarien habt ihr im Kopf?</li>
+                            <li>Was wollt ihr als nächstes ausprobieren?</li>
+                            <li>Feedback zum Workshop willkommen!</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- .slide-container -->
+
+<nav class="slide-nav">
+    <button class="slide-nav-btn" id="btn-prev" title="Zurück" onclick="navigatePrev()">◀</button>
+    <button class="slide-nav-btn" id="btn-next" title="Weiter" onclick="navigateNext()">▶</button>
+</nav>
+<div class="slide-counter" id="slide-counter">1 / 1</div>
+
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+
+    // Abschnittsgrenzen innerhalb dieser Datei (0-basiert)
+    // Praxisbeispiele: Folien 0-2 (global 13-15)
+    // Abschluss:       Folie  3   (global 16)
+    const localSections = [
+        null,                     // 0 Einstieg → andere Datei
+        null,                     // 1 Grundlagen → andere Datei
+        null,                     // 2 LLM & Tools → andere Datei
+        null,                     // 3 Live-Demo → andere Datei
+        { start: 0, end: 2 },     // 4 Praxisbeispiele
+        { start: 3, end: 3 },     // 5 Abschluss
+    ];
+    const sectionFiles = [
+        'praesentation.html',     // 0 Einstieg
+        'praesentation-2.html',   // 1 Grundlagen
+        'praesentation-3.html',   // 2 LLM & Tools
+        'praesentation-3.html',   // 3 Live-Demo
+        null,                     // 4 Praxisbeispiele (lokal)
+        null,                     // 5 Abschluss (lokal)
+    ];
+
+    const legendItems = document.querySelectorAll('.legend-section');
+
+    function getSectionIndex(slideIdx) {
+        for (let i = localSections.length - 1; i >= 0; i--) {
+            const s = localSections[i];
+            if (s && slideIdx >= s.start) return i;
+        }
+        return 4; // Fallback: Praxisbeispiele
+    }
+
+    function updateLegend(slideIdx) {
+        const active = getSectionIndex(slideIdx);
+        legendItems.forEach((el, i) => el.classList.toggle('active', i === active));
+    }
+
+    function goTo(n) {
+        slides[currentSlide].classList.remove('active');
+        currentSlide = Math.max(0, Math.min(n, slides.length - 1));
+        slides[currentSlide].classList.add('active');
+        document.getElementById('slide-counter').textContent =
+            `${currentSlide + 1} / ${slides.length}`;
+        document.getElementById('btn-prev').disabled = false;
+        document.getElementById('btn-next').disabled = (currentSlide === slides.length - 1);
+        updateLegend(currentSlide);
+    }
+
+    function navigatePrev() {
+        if (currentSlide === 0) {
+            window.location.href = 'praesentation-3.html#last';
+        } else {
+            goTo(currentSlide - 1);
+        }
+    }
+
+    function navigateNext() {
+        if (currentSlide < slides.length - 1) {
+            goTo(currentSlide + 1);
+        }
+        // letzte Folie: ▶ deaktiviert
+    }
+
+    function goToSection(idx) {
+        const s = localSections[idx];
+        if (s) {
+            goTo(s.start);
+        } else if (sectionFiles[idx]) {
+            window.location.href = sectionFiles[idx];
+        }
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') navigateNext();
+        if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                     navigatePrev();
+    });
+
+    if (window.location.hash === '#last') {
+        goTo(slides.length - 1);
+    } else {
+        goTo(0);
+    }
+</script>
+
+</body>
+</html>

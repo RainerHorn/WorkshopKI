@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshop: Lokale LLMs – Tools &amp; Demo</title>
+    <link rel="stylesheet" href="../Templates/styles.css">
+    <style>
+        html, body { height: 100%; overflow: hidden; margin: 0; padding: 0; }
+        html { font-size: 90%; }
+
+        /* ── Progress-Legende ── */
+        #legend {
+            position: fixed; top: 0; left: 0; right: 0; height: 2.8rem;
+            display: flex; align-items: stretch; z-index: 500;
+            background: rgba(15,30,70,0.55); backdrop-filter: blur(6px);
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+        .legend-section {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            gap: 0.35rem; font-family: 'Segoe UI', sans-serif;
+            font-size: clamp(0.65rem, 1.1vw, 0.8rem); color: rgba(255,255,255,0.45);
+            cursor: pointer; padding: 0 0.4rem;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            transition: background 0.2s, color 0.2s; user-select: none; white-space: nowrap;
+            position: relative;
+        }
+        .legend-section:last-child { border-right: none; }
+        .legend-section:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+        .legend-section.active { background: rgba(255,255,255,0.15); color: white; font-weight: 600; }
+        .legend-section .legend-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: rgba(255,255,255,0.3); flex-shrink: 0; transition: background 0.2s;
+        }
+        .legend-section.active .legend-dot { background: #90caf9; }
+        .legend-section.active::after {
+            content: ''; position: absolute; bottom: 0; height: 2px; width: 100%;
+            background: linear-gradient(90deg, #667eea, #90caf9);
+        }
+
+        /* ── Slide Container ── */
+        .slide-container {
+            width: 100vw; height: 100vh; position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .slide {
+            position: absolute; inset: 0; display: none; flex-direction: column;
+            padding: 3.8rem 3rem 2.5rem 3rem; box-sizing: border-box; overflow: hidden;
+        }
+        .slide.active { display: flex; }
+
+        /* ── Panel ── */
+        .slide-panel {
+            background: white; border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden; flex: 1; display: flex; flex-direction: column;
+        }
+        .slide-panel .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white; padding: 1.2rem 2rem; flex-shrink: 0;
+        }
+        .slide-panel .header h1 { font-size: 1.8rem; margin: 0 0 0.2rem 0; font-weight: 700; }
+        .slide-panel .header p { font-size: 1rem; opacity: 0.85; margin: 0; }
+        .slide-panel .content {
+            padding: 1.5rem 2rem; overflow: hidden; flex: 1;
+            display: flex; flex-direction: column; gap: 0.9rem;
+        }
+
+        /* ── Tool-Kacheln ── */
+        .tools-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.2rem; flex: 1; }
+        .tool-card {
+            border-radius: 14px; padding: 1.4rem 1.5rem;
+            display: flex; flex-direction: column; gap: 0.6rem;
+            border: 2px solid transparent; transition: transform 0.2s;
+        }
+        .tool-card:hover { transform: translateY(-3px); }
+        .tool-card.ollama { background: #f0fdf4; border-color: #4caf50; }
+        .tool-card.lmstudio { background: #eff6ff; border-color: #3b82f6; }
+        .tool-card.webui { background: #fdf4ff; border-color: #a855f7; }
+        .tool-card .tool-name {
+            font-size: 2rem; font-weight: 800;
+        }
+        .tool-card.ollama .tool-name { color: #15803d; }
+        .tool-card.lmstudio .tool-name { color: #1d4ed8; }
+        .tool-card.webui .tool-name { color: #7e22ce; }
+        .tool-card .tool-desc { font-size: 1.9rem; color: #444; line-height: 1.4; }
+        .tool-card .tool-tag {
+            display: inline-block; font-size: 1.9rem; font-weight: 600;
+            padding: 0.15rem 0.6rem; border-radius: 6px; margin-top: auto;
+        }
+        .tool-card.ollama .tool-tag { background: #dcfce7; color: #15803d; }
+        .tool-card.lmstudio .tool-tag { background: #dbeafe; color: #1d4ed8; }
+        .tool-card.webui .tool-tag { background: #f3e8ff; color: #7e22ce; }
+
+        /* ── Hardware-Tabelle ── */
+        .hw-table { width: 100%; border-collapse: collapse; font-size: 1.9rem; }
+        .hw-table th {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white; padding: 0.7rem 1.1rem; text-align: left; font-weight: 600;
+        }
+        .hw-table th:first-child { border-radius: 8px 0 0 0; }
+        .hw-table th:last-child { border-radius: 0 8px 0 0; }
+        .hw-table td { padding: 0.65rem 1.1rem; border-bottom: 1px solid #e9ecef; color: #333; }
+        .hw-table tr:nth-child(even) td { background: #f8f9ff; }
+        .hw-table tr:last-child td { border-bottom: none; }
+        .hw-table .ok { color: #15803d; font-weight: 600; }
+        .hw-table .warn { color: #b45309; font-weight: 600; }
+        .hw-table .bad { color: #b91c1c; }
+
+        /* ── Datenschutz / Grenzen ── */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; flex: 1; }
+        .info-card {
+            border-radius: 12px; padding: 1.2rem 1.4rem;
+            display: flex; flex-direction: column; gap: 0.4rem;
+        }
+        .info-card h4 { font-size: 2rem; font-weight: 700; margin: 0 0 0.3rem 0; }
+        .info-card ul { margin: 0; padding-left: 1.5rem; font-size: 1.9rem; color: #444; }
+        .info-card ul li { margin: 0.3rem 0; }
+        .info-card.green { background: #f0fdf4; border-left: 4px solid #4caf50; }
+        .info-card.green h4 { color: #15803d; }
+        .info-card.blue { background: #eff6ff; border-left: 4px solid #3b82f6; }
+        .info-card.blue h4 { color: #1d4ed8; }
+        .info-card.red { background: #fff1f2; border-left: 4px solid #ef4444; }
+        .info-card.red h4 { color: #b91c1c; }
+        .info-card.red ul { color: #7f1d1d; }
+        .info-card.orange { background: #fffbeb; border-left: 4px solid #f59e0b; }
+        .info-card.orange h4 { color: #92400e; }
+        .info-card.orange ul { color: #78350f; }
+
+        /* ── Demo-Folie ── */
+        .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; flex: 1; }
+        .demo-step {
+            border-radius: 12px; padding: 1.1rem 1.3rem;
+            font-size: 1.9rem; display: flex; flex-direction: column; gap: 0.4rem;
+        }
+        .demo-step h4 { font-size: 2rem; font-weight: 700; margin: 0; }
+        .demo-step.blue { background: #eff6ff; border-left: 4px solid #3b82f6; }
+        .demo-step.blue h4 { color: #1d4ed8; }
+        .demo-step.green { background: #f0fdf4; border-left: 4px solid #4caf50; }
+        .demo-step.green h4 { color: #15803d; }
+        .demo-step.red { background: #fff1f2; border-left: 4px solid #ef4444; }
+        .demo-step.red h4 { color: #b91c1c; }
+        .demo-step.purple { background: #fdf4ff; border-left: 4px solid #a855f7; }
+        .demo-step.purple h4 { color: #7e22ce; }
+        .demo-intro {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-left: 4px solid #667eea; border-radius: 8px;
+            padding: 0.8rem 1rem; font-size: 1.9rem; color: #333;
+        }
+
+        /* ── Infobox ── */
+        .box-tip {
+            border-radius: 8px; padding: 0.7rem 1rem; font-size: 1.9rem; margin-top: auto;
+        }
+        .box-tip.green { background: #f0fdf4; border-left: 4px solid #4caf50; color: #15803d; }
+        .box-tip.yellow { background: #fefce8; border-left: 4px solid #eab308; color: #713f12; }
+        .box-tip.red { background: #fff1f2; border-left: 4px solid #ef4444; color: #7f1d1d; }
+
+        /* ── Navigation ── */
+        .slide-nav {
+            position: fixed; bottom: 1.2rem; right: 1.5rem;
+            display: flex; align-items: center; gap: 0.6rem; z-index: 1000;
+        }
+        .slide-nav-btn {
+            background: linear-gradient(135deg, #1e3c72, #2a5298); color: white;
+            border: none; border-radius: 50%; width: 48px; height: 48px;
+            font-size: 1.3rem; cursor: pointer; box-shadow: 0 4px 15px rgba(30,60,114,0.5);
+            transition: box-shadow 0.2s, transform 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .slide-nav-btn:hover { box-shadow: 0 6px 20px rgba(30,60,114,0.7); transform: translateY(-2px); }
+        .slide-nav-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+        .slide-counter {
+            position: fixed; bottom: 1.4rem; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.85); font-size: 0.95rem;
+            font-family: 'Segoe UI', sans-serif; letter-spacing: 0.05em;
+        }
+        .home-link {
+            position: fixed; top: 1rem; left: 1.2rem; color: rgba(255,255,255,0.7);
+            font-family: 'Segoe UI', sans-serif; font-size: 0.9rem; text-decoration: none;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 8px; padding: 0.35rem 0.8rem; transition: background 0.2s; z-index: 1000;
+        }
+        .home-link:hover { background: rgba(255,255,255,0.2); color: white; }
+    </style>
+</head>
+<body>
+
+<a href="index.html" class="home-link">← Übersicht</a>
+
+<nav id="legend">
+    <div class="legend-section" data-section="0" onclick="goToSection(0)">
+        <span class="legend-dot"></span> Einstieg
+    </div>
+    <div class="legend-section" data-section="1" onclick="goToSection(1)">
+        <span class="legend-dot"></span> Grundlagen
+    </div>
+    <div class="legend-section active" data-section="2" onclick="goToSection(2)">
+        <span class="legend-dot"></span> LLM &amp; Tools
+    </div>
+    <div class="legend-section" data-section="3" onclick="goToSection(3)">
+        <span class="legend-dot"></span> Live-Demo
+    </div>
+    <div class="legend-section" data-section="4" onclick="goToSection(4)">
+        <span class="legend-dot"></span> Praxisbeispiele
+    </div>
+    <div class="legend-section" data-section="5" onclick="goToSection(5)">
+        <span class="legend-dot"></span> Abschluss
+    </div>
+</nav>
+
+<div class="slide-container">
+
+    <!-- Folie 8: Tools & Plattformen -->
+    <div class="slide active" id="slide-1">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Tools &amp; Plattformen</h1>
+                <p>Womit laufen lokale LLMs?</p>
+            </div>
+            <div class="content">
+                <div class="tools-grid">
+                    <div class="tool-card ollama">
+                        <div class="tool-name">🦙 Ollama</div>
+                        <div class="tool-desc">Kommandozeilen-Tool zum Laden und Ausführen von Modellen. Einfachste Installation, API inklusive.</div>
+                        <span class="tool-tag">Empfohlen: Einstieg &amp; Server</span>
+                    </div>
+                    <div class="tool-card lmstudio">
+                        <div class="tool-name">🖥️ LM Studio</div>
+                        <div class="tool-desc">Grafische Oberfläche zum Herunterladen und Testen von Modellen. Ideal für Einsteiger ohne Terminal.</div>
+                        <span class="tool-tag">Empfohlen: Einsteiger</span>
+                    </div>
+                    <div class="tool-card webui">
+                        <div class="tool-name">🌐 Open WebUI</div>
+                        <div class="tool-desc">Browser-basierte Chat-Oberfläche auf Ollama-Basis. Sieht aus wie ChatGPT – läuft komplett lokal.</div>
+                        <span class="tool-tag">Empfohlen: Unterricht</span>
+                    </div>
+                </div>
+                <div class="box-tip green">
+                    💡 Kombination: <strong>Ollama + Open WebUI</strong> – leicht zu installieren, vertraut wirkende Oberfläche für die Gruppe.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie 9: Hardware & Performance -->
+    <div class="slide" id="slide-2">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Hardware &amp; Performance</h1>
+                <p>Was brauche ich, was kann ich erwarten?</p>
+            </div>
+            <div class="content">
+                <table class="hw-table">
+                    <thead>
+                        <tr>
+                            <th>Modellgröße</th>
+                            <th>RAM-Bedarf</th>
+                            <th>Geschwindigkeit</th>
+                            <th>Qualität</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>3b</strong> (z. B. llama3.2:3b)</td>
+                            <td class="ok">~4 GB</td>
+                            <td class="ok">Schnell (CPU)</td>
+                            <td class="warn">Grundlegend</td>
+                        </tr>
+                        <tr>
+                            <td><strong>7–8b</strong> (z. B. llama3.1:8b)</td>
+                            <td class="warn">~8–10 GB</td>
+                            <td class="warn">Mittel (CPU/GPU)</td>
+                            <td class="ok">Gut</td>
+                        </tr>
+                        <tr>
+                            <td><strong>70b</strong> (z. B. llama3.3:70b)</td>
+                            <td class="bad">~40+ GB</td>
+                            <td class="bad">Langsam ohne GPU</td>
+                            <td class="ok">Sehr gut</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="box-tip yellow">
+                    ⚡ <strong>Empfehlung für Workshop-Laptops:</strong> llama3.2:3b (CPU reicht) oder mistral:7b mit 16 GB RAM.
+                    GPU (VRAM) beschleunigt massiv – ohne GPU ist CPU-Inferenz langsamer, aber funktionsfähig.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie 10: Sicherheit & Datenschutz -->
+    <div class="slide" id="slide-3">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Sicherheit &amp; Datenschutz</h1>
+                <p>Warum lokale LLMs im Schulkontext sinnvoll sind</p>
+            </div>
+            <div class="content">
+                <div class="info-grid">
+                    <div class="info-card green">
+                        <h4>✅ Lokale Datenhaltung</h4>
+                        <ul>
+                            <li>Alle Daten bleiben auf dem Gerät</li>
+                            <li>Kein Transfer in die Cloud</li>
+                            <li>Kein Nutzerkonto erforderlich</li>
+                        </ul>
+                    </div>
+                    <div class="info-card blue">
+                        <h4>🔒 DSGVO-Konformität</h4>
+                        <ul>
+                            <li>Keine Weitergabe an Dritte</li>
+                            <li>Schülerdaten sicher verarbeitbar</li>
+                            <li>Offline-Betrieb = kein Risiko</li>
+                        </ul>
+                    </div>
+                    <div class="info-card green">
+                        <h4>🌐 Netzwerk-Unabhängigkeit</h4>
+                        <ul>
+                            <li>Funktioniert ohne Internet</li>
+                            <li>Kein Schul-Proxy-Problem</li>
+                            <li>Stabile Performance</li>
+                        </ul>
+                    </div>
+                    <div class="info-card orange">
+                        <h4>⚠️ Zu beachten</h4>
+                        <ul>
+                            <li>Modelle können falsche Infos liefern</li>
+                            <li>Kein Filter für unangemessene Inhalte</li>
+                            <li>System-Prompt zur Steuerung nutzen</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie 11: Grenzen lokaler Modelle -->
+    <div class="slide" id="slide-4">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Grenzen lokaler Modelle</h1>
+                <p>Realistische Erwartungen setzen</p>
+            </div>
+            <div class="content">
+                <div class="demo-intro">
+                    Lokale LLMs sind leistungsfähig – aber kein Ersatz für große Cloud-Modelle. Diese Grenzen sollte man kennen:
+                </div>
+                <div class="info-grid">
+                    <div class="info-card red">
+                        <h4>📉 Qualitätsunterschied</h4>
+                        <ul>
+                            <li>Kleinere Modelle halluzinieren häufiger</li>
+                            <li>Komplexe Schlussfolgerungen weniger präzise</li>
+                        </ul>
+                    </div>
+                    <div class="info-card red">
+                        <h4>💾 Ressourcenbedarf</h4>
+                        <ul>
+                            <li>RAM-Hunger: 8 GB+ für nutzbare Modelle</li>
+                            <li>Ohne GPU: deutlich langsamer</li>
+                        </ul>
+                    </div>
+                    <div class="info-card orange">
+                        <h4>📅 Aktualität</h4>
+                        <ul>
+                            <li>Wissen endet am Trainings-Cutoff</li>
+                            <li>Keine aktuellen Ereignisse bekannt</li>
+                        </ul>
+                    </div>
+                    <div class="info-card orange">
+                        <h4>🌍 Mehrsprachigkeit</h4>
+                        <ul>
+                            <li>Deutsch meist schlechter als Englisch</li>
+                            <li>Englische Prompts oft bessere Ergebnisse</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="box-tip yellow">
+                    🎯 Fazit: Für strukturierte, klar definierte Aufgaben sind lokale LLMs sehr gut geeignet.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie 12: Live-Demo Ablauf -->
+    <div class="slide" id="slide-5">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Live-Demo: Ablauf</h1>
+                <p>Was wir jetzt gemeinsam machen</p>
+            </div>
+            <div class="content">
+                <div class="demo-grid">
+                    <div class="demo-step blue">
+                        <h4>1️⃣ Modell starten</h4>
+                        <p>Ollama starten, Modell laden:<br><code>ollama run llama3.2</code></p>
+                    </div>
+                    <div class="demo-step blue">
+                        <h4>2️⃣ Erster Prompt</h4>
+                        <p>Einfache Frage stellen – Antwort beobachten. Token-Ausgabe live sehen.</p>
+                    </div>
+                    <div class="demo-step red">
+                        <h4>3️⃣ Schlechter Prompt</h4>
+                        <p>„Erkläre mir alles über KI." → vage, ausschweifend, wenig nützlich.</p>
+                    </div>
+                    <div class="demo-step green">
+                        <h4>4️⃣ Guter Prompt</h4>
+                        <p>Rolle + Aufgabe + Format + Beispiel → präzise, nutzbare Antwort.</p>
+                    </div>
+                </div>
+                <div class="box-tip green">
+                    🔁 Reproduzierbarkeit: gleiche Anfrage → ähnliche Antwort. <strong>Temperature</strong> steuert Kreativität vs. Konsistenz.
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- .slide-container -->
+
+<nav class="slide-nav">
+    <button class="slide-nav-btn" id="btn-prev" title="Zurück" onclick="navigatePrev()">◀</button>
+    <button class="slide-nav-btn" id="btn-next" title="Weiter" onclick="navigateNext()">▶</button>
+</nav>
+<div class="slide-counter" id="slide-counter">1 / 1</div>
+
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+
+    // Abschnittsgrenzen innerhalb dieser Datei (0-basiert)
+    // LLM & Tools: Folien 0-3 (global 8-11)
+    // Live-Demo:   Folie  4   (global 12)
+    const localSections = [
+        null,                     // 0 Einstieg → andere Datei
+        null,                     // 1 Grundlagen → andere Datei
+        { start: 0, end: 3 },     // 2 LLM & Tools
+        { start: 4, end: 4 },     // 3 Live-Demo
+        null,                     // 4 Praxisbeispiele → andere Datei
+        null,                     // 5 Abschluss → andere Datei
+    ];
+    const sectionFiles = [
+        'praesentation.html',     // 0 Einstieg
+        'praesentation-2.html',   // 1 Grundlagen
+        null,                     // 2 LLM & Tools (lokal)
+        null,                     // 3 Live-Demo (lokal)
+        'praesentation-4.html',   // 4 Praxisbeispiele
+        'praesentation-4.html',   // 5 Abschluss
+    ];
+
+    const legendItems = document.querySelectorAll('.legend-section');
+
+    function getSectionIndex(slideIdx) {
+        for (let i = localSections.length - 1; i >= 0; i--) {
+            const s = localSections[i];
+            if (s && slideIdx >= s.start) return i;
+        }
+        return 2; // Fallback: LLM & Tools
+    }
+
+    function updateLegend(slideIdx) {
+        const active = getSectionIndex(slideIdx);
+        legendItems.forEach((el, i) => el.classList.toggle('active', i === active));
+    }
+
+    function goTo(n) {
+        slides[currentSlide].classList.remove('active');
+        currentSlide = Math.max(0, Math.min(n, slides.length - 1));
+        slides[currentSlide].classList.add('active');
+        document.getElementById('slide-counter').textContent =
+            `${currentSlide + 1} / ${slides.length}`;
+        document.getElementById('btn-prev').disabled = false;
+        document.getElementById('btn-next').disabled = false;
+        updateLegend(currentSlide);
+    }
+
+    function navigatePrev() {
+        if (currentSlide === 0) {
+            window.location.href = 'praesentation-2.html#last';
+        } else {
+            goTo(currentSlide - 1);
+        }
+    }
+
+    function navigateNext() {
+        if (currentSlide === slides.length - 1) {
+            window.location.href = 'praesentation-4.html';
+        } else {
+            goTo(currentSlide + 1);
+        }
+    }
+
+    function goToSection(idx) {
+        const s = localSections[idx];
+        if (s) {
+            goTo(s.start);
+        } else if (sectionFiles[idx]) {
+            window.location.href = sectionFiles[idx];
+        }
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') navigateNext();
+        if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                     navigatePrev();
+    });
+
+    if (window.location.hash === '#last') {
+        goTo(slides.length - 1);
+    } else {
+        goTo(0);
+    }
+</script>
+
+</body>
+</html>

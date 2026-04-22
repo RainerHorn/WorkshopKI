@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beispiel D: Code-Unterstützung mit Python</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.1rem;
+            line-height: 1.85;
+            color: #222;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 3rem 10%;
+        }
+
+        .page {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+            overflow: hidden;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 2.5rem 3rem;
+        }
+        .page-header .label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+        }
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .page-header p {
+            font-size: 1.05rem;
+            opacity: 0.85;
+        }
+
+        /* ── Inhalt ── */
+        .page-body {
+            padding: 3rem 3.5rem;
+        }
+
+        /* ── Abschnittsüberschrift ── */
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e3c72;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+            margin: 3rem 0 1.8rem 0;
+        }
+        .section-title:first-of-type { margin-top: 0; }
+
+        p { margin: 0.8rem 0; }
+        ul, ol { padding-left: 1.6rem; margin: 0.8rem 0; }
+        li { margin: 0.45rem 0; }
+
+        /* ── Boxen ── */
+        .box {
+            border-radius: 10px;
+            padding: 1.4rem 1.8rem;
+            margin: 1.8rem 0;
+            line-height: 1.85;
+        }
+        .box-blue   { background: #eef4ff; border-left: 4px solid #2a5298; }
+        .box-green  { background: #eaf7ea; border-left: 4px solid #43a047; }
+        .box-yellow { background: #fffbea; border-left: 4px solid #f59e0b; }
+        .box-red    { background: #fff1f0; border-left: 4px solid #e53e3e; }
+        .box strong { display: block; margin-bottom: 0.5rem; }
+        .box ul { padding-left: 1.4rem; margin: 0.5rem 0 0 0; }
+        .box li { margin: 0.4rem 0; }
+
+        /* ── Code-Block ── */
+        .cmd {
+            background: #18243a;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1.4rem 0;
+        }
+        .cmd-label {
+            padding: 0.55rem 1.5rem;
+            background: rgba(255,255,255,0.07);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.8rem;
+            color: #7a99cc;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+        .cmd-code {
+            padding: 1.3rem 1.5rem;
+            font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+            font-size: 0.97rem;
+            color: #9fdfb0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.7;
+        }
+        .cmd-python .cmd-code {
+            color: #c5e1ff;   /* hellblau für Python-Code */
+        }
+        .cmd-example .cmd-code {
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        .cmd-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0.55rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #9ab4d8;
+            border-radius: 6px;
+            padding: 0.3rem 0.95rem;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: background 0.18s, color 0.18s;
+            white-space: nowrap;
+        }
+        .copy-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+        .copy-btn.copied { background: #2e7d32; border-color: #4caf50; color: #fff; }
+
+        code {
+            background: #eef2ff;
+            color: #1e3c72;
+            padding: 0.15em 0.45em;
+            border-radius: 4px;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            font-size: 0.92em;
+        }
+
+        /* ── Schritte ── */
+        .step {
+            display: flex;
+            gap: 1.2rem;
+            align-items: flex-start;
+            margin: 2.2rem 0 0.5rem 0;
+        }
+        .step-num {
+            flex-shrink: 0;
+            width: 2.4rem;
+            height: 2.4rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0.15rem;
+            box-shadow: 0 3px 10px rgba(30,60,114,0.3);
+        }
+        .step-body { flex: 1; }
+        .step-body h4 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1e3c72;
+            margin-bottom: 0.4rem;
+        }
+        .step-body p { margin: 0.4rem 0; }
+        .step-body .cmd { margin-top: 0.8rem; }
+
+        /* ── Prompt-Karten ── */
+        .prompt-level {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+        .prompt-level-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: #f8faff;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .level-1 .level-badge { background: #ffe0e0; color: #c62828; }
+        .level-2 .level-badge { background: #fff8e0; color: #c27d00; }
+        .level-3 .level-badge { background: #e0f5e0; color: #276227; }
+        .level-4 .level-badge { background: #e0eaff; color: #1e3c72; }
+        .prompt-level-header h4 { color: #1e3c72; font-size: 1.05rem; font-weight: 700; }
+        .prompt-level-header p  { color: #666; font-size: 0.95rem; margin: 0; }
+        .prompt-level .cmd { margin: 0; border-radius: 0; }
+        .prompt-level .cmd-label { display: none; }
+
+        /* ── Tabelle ── */
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 1rem;
+        }
+        .result-table th {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 0.9rem 1.2rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        .result-table td {
+            padding: 0.85rem 1.2rem;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        .result-table tr:nth-child(even) td { background: #f8f9fa; }
+        .result-table tr:hover td { background: #eef4ff; }
+
+        /* ── Trennlinie ── */
+        hr { border: none; border-top: 2px solid #eef0f5; margin: 3.5rem 0; }
+
+        /* ── Footer ── */
+        .page-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.6rem 3.5rem;
+            border-top: 2px solid #eef0f5;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        .page-footer a {
+            color: #2a5298;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .page-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            body { padding: 1.2rem 0.8rem; }
+            .page-body { padding: 2rem 1.5rem; }
+            .page-header { padding: 2rem 1.5rem; }
+            .page-header h1 { font-size: 1.6rem; }
+            .page-footer { flex-direction: column; gap: 0.6rem; padding: 1.4rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <div class="label">Teilnehmerarbeit · Beispiel D</div>
+        <h1>Code-Unterstützung mit Python</h1>
+        <p>Ein lokales LLM als Programmierhilfe – Skripte generieren, erklären und verbessern lassen.</p>
+    </div>
+
+    <div class="page-body">
+
+        <!-- Aufgabe -->
+        <div class="box box-green">
+            <strong>🎯 Aufgabe</strong>
+            <ul>
+                <li>Das lokale LLM ein Python-Skript zur Textanonymisierung schreiben lassen</li>
+                <li>Den generierten Code verstehen, testen und schrittweise verbessern</li>
+                <li>Lernen, wie man iterativ mit einem LLM programmiert: generieren → testen → nachfragen</li>
+            </ul>
+        </div>
+
+        <div class="box box-blue">
+            <strong>💡 Voraussetzungen</strong>
+            <ul>
+                <li>Python 3.x auf dem System installiert (<code>python --version</code> im Terminal prüfen)</li>
+                <li>Ein laufendes lokales Modell – empfohlen: <code>llama3.1:8b</code> oder <code>phi3:mini</code></li>
+                <li>Kein Python-Vorwissen nötig – das Modell erklärt den Code auf Wunsch</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <!-- Schritt-für-Schritt -->
+        <h2 class="section-title">Schritt für Schritt</h2>
+
+        <!-- Schritt 1 -->
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+                <h4>Skript generieren lassen</h4>
+                <p>Schicken Sie den folgenden Prompt an Ihr lokales Modell.
+                   Das Modell soll ein fertiges, lauffähiges Python-Skript ausgeben.</p>
+                <div class="cmd">
+                    <div class="cmd-code">Schreibe ein Python-Skript, das einen Text aus einer Datei liest
+und alle personenbezogenen Daten durch Platzhalter ersetzt.
+
+Anforderungen:
+- Eingabe: eine Textdatei (eingabe.txt)
+- Ersetze Vor- und Nachnamen durch [NAME]
+- Ersetze Datumsangaben (TT.MM.JJJJ) durch [DATUM]
+- Ersetze E-Mail-Adressen durch [EMAIL]
+- Ausgabe: neue Datei (ausgabe.txt) mit den ersetzten Inhalten
+- Das Skript soll kommentiert sein, damit man es leicht versteht
+- Nutze nur die Python-Standardbibliothek (kein pip install nötig)
+
+Gib ausschließlich den Python-Code aus, keinen erklärenden Text drumherum.</div>
+                    <div class="cmd-footer">
+                        <button class="copy-btn" onclick="copyCmd(this, 'Schreibe ein Python-Skript, das einen Text aus einer Datei liest\nund alle personenbezogenen Daten durch Platzhalter ersetzt.\n\nAnforderungen:\n- Eingabe: eine Textdatei (eingabe.txt)\n- Ersetze Vor- und Nachnamen durch [NAME]\n- Ersetze Datumsangaben (TT.MM.JJJJ) durch [DATUM]\n- Ersetze E-Mail-Adressen durch [EMAIL]\n- Ausgabe: neue Datei (ausgabe.txt) mit den ersetzten Inhalten\n- Das Skript soll kommentiert sein, damit man es leicht versteht\n- Nutze nur die Python-Standardbibliothek (kein pip install nötig)\n\nGib ausschließlich den Python-Code aus, keinen erklärenden Text drumherum.')">📋 Kopieren</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schritt 2 -->
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+                <h4>Code in eine Datei speichern</h4>
+                <p>Kopieren Sie den generierten Code, öffnen Sie einen Texteditor
+                   (z. B. Notepad, VS Code) und speichern Sie ihn als <code>anonymisieren.py</code>.</p>
+                <p>Legen Sie außerdem eine <code>eingabe.txt</code> mit folgendem Testinhalt an:</p>
+                <div class="cmd cmd-example">
+                    <div class="cmd-label">Testdatei – eingabe.txt</div>
+                    <div class="cmd-code">Sehr geehrte Frau Musterfrau,
+
+wie am 14.04.2026 besprochen, übersenden wir Ihnen die Unterlagen für
+Herrn Max Mustermann (geb. 03.09.2008).
+
+Für Rückfragen erreichen Sie uns unter schulleitung@bbs-musterstadt.de
+oder über das Sekretariat. Frau Anna Bergmann steht Ihnen werktags
+von 08:00 bis 13:00 Uhr zur Verfügung.
+
+Mit freundlichen Grüßen
+Thomas Koch
+Klassenleitung KFZ 12c</div>
+                    <div class="cmd-footer">
+                        <button class="copy-btn" onclick="copyCmd(this, document.getElementById('testdatei').textContent)">📋 Kopieren</button>
+                    </div>
+                </div>
+                <textarea id="testdatei" style="display:none">Sehr geehrte Frau Musterfrau,
+
+wie am 14.04.2026 besprochen, übersenden wir Ihnen die Unterlagen für
+Herrn Max Mustermann (geb. 03.09.2008).
+
+Für Rückfragen erreichen Sie uns unter schulleitung@bbs-musterstadt.de
+oder über das Sekretariat. Frau Anna Bergmann steht Ihnen werktags
+von 08:00 bis 13:00 Uhr zur Verfügung.
+
+Mit freundlichen Grüßen
+Thomas Koch
+Klassenleitung KFZ 12c</textarea>
+            </div>
+        </div>
+
+        <!-- Schritt 3 -->
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+                <h4>Skript ausführen</h4>
+                <p>Öffnen Sie ein Terminal im selben Ordner wie die Dateien und führen Sie aus:</p>
+                <div class="cmd">
+                    <div class="cmd-label">Terminal-Befehl</div>
+                    <div class="cmd-code">python anonymisieren.py</div>
+                    <div class="cmd-footer">
+                        <button class="copy-btn" onclick="copyCmd(this, 'python anonymisieren.py')">📋 Kopieren</button>
+                    </div>
+                </div>
+                <p>Prüfen Sie danach die erzeugte <code>ausgabe.txt</code>:
+                   Wurden alle Namen, Daten und E-Mail-Adressen ersetzt?</p>
+            </div>
+        </div>
+
+        <!-- Schritt 4 -->
+        <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+                <h4>Fehler und Lücken melden – iterativ verbessern</h4>
+                <p>Wahrscheinlich funktioniert nicht alles auf Anhieb. Beschreiben Sie dem Modell,
+                   was fehlt oder falsch ist – und lassen Sie es den Code korrigieren.</p>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Verbesserungs-Prompts -->
+        <h2 class="section-title">Iterativ verbessern – Prompts für häufige Probleme</h2>
+
+        <p>Kopieren Sie den jeweils passenden Prompt und hängen Sie den aktuellen Code unten an.</p>
+
+        <!-- Prompt 1 -->
+        <div class="prompt-level level-1">
+            <div class="prompt-level-header">
+                <div class="level-badge">A</div>
+                <div>
+                    <h4>Namen werden nicht erkannt</h4>
+                    <p>Das Skript ersetzt manche Namen nicht zuverlässig.</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code">Das Skript erkennt nicht alle Namen – z. B. bleibt „Anna Bergmann" stehen.
+
+Erkläre kurz, warum das passiert, und verbessere das Skript so,
+dass es zuverlässiger Vor- + Nachnamen-Kombinationen erkennt.
+Gib nur den vollständigen korrigierten Python-Code aus.
+
+Code:
+[Aktuellen Code hier einfügen]</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'Das Skript erkennt nicht alle Namen – z. B. bleibt „Anna Bergmann" stehen.\n\nErkläre kurz, warum das passiert, und verbessere das Skript so,\ndass es zuverlässiger Vor- + Nachnamen-Kombinationen erkennt.\nGib nur den vollständigen korrigierten Python-Code aus.\n\nCode:\n[Aktuellen Code hier einfügen]')">📋 Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prompt 2 -->
+        <div class="prompt-level level-2">
+            <div class="prompt-level-header">
+                <div class="level-badge">B</div>
+                <div>
+                    <h4>Fehlermeldung vom Python-Interpreter</h4>
+                    <p>Das Skript läuft nicht oder bricht mit einer Fehlermeldung ab.</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code">Beim Ausführen des Skripts erscheint folgender Fehler:
+
+[Fehlermeldung hier einfügen]
+
+Erkläre die Ursache in einem Satz und gib den korrigierten Code aus.
+
+Code:
+[Aktuellen Code hier einfügen]</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'Beim Ausführen des Skripts erscheint folgender Fehler:\n\n[Fehlermeldung hier einfügen]\n\nErkläre die Ursache in einem Satz und gib den korrigierten Code aus.\n\nCode:\n[Aktuellen Code hier einfügen]')">📋 Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prompt 3 -->
+        <div class="prompt-level level-3">
+            <div class="prompt-level-header">
+                <div class="level-badge">C</div>
+                <div>
+                    <h4>Code erklären lassen</h4>
+                    <p>Sie verstehen nicht, was eine bestimmte Zeile oder Funktion tut.</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code">Erkläre den folgenden Python-Code so, dass ihn jemand ohne
+Programmierkenntnisse versteht. Gehe Zeile für Zeile vor und
+erkläre, was jeder Abschnitt bewirkt.
+
+Code:
+[Code-Abschnitt hier einfügen]</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'Erkläre den folgenden Python-Code so, dass ihn jemand ohne\nProgrammierkenntnisse versteht. Gehe Zeile für Zeile vor und\nerkläre, was jeder Abschnitt bewirkt.\n\nCode:\n[Code-Abschnitt hier einfügen]')">📋 Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prompt 4 -->
+        <div class="prompt-level level-4">
+            <div class="prompt-level-header">
+                <div class="level-badge">D</div>
+                <div>
+                    <h4>Skript erweitern</h4>
+                    <p>Neue Anforderung: alle ersetzten Stellen in einer Log-Datei protokollieren.</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code">Erweitere das Skript um folgende Funktion:
+Jede vorgenommene Ersetzung soll in einer Datei protokoll.txt protokolliert werden.
+Format je Zeile: [Zeilennummer] | Original: „..." | Ersetzt durch: „..."
+
+Gib den vollständig erweiterten Code aus.
+
+Code:
+[Aktuellen Code hier einfügen]</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'Erweitere das Skript um folgende Funktion:\nJede vorgenommene Ersetzung soll in einer Datei protokoll.txt protokolliert werden.\nFormat je Zeile: [Zeilennummer] | Original: „..." | Ersetzt durch: „..."\n\nGib den vollständig erweiterten Code aus.\n\nCode:\n[Aktuellen Code hier einfügen]')">📋 Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Vergleich: LLM vs. manuelle Suche -->
+        <h2 class="section-title">Was das LLM kann – und wo es scheitert</h2>
+
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>Aufgabe</th>
+                    <th>LLM-Eignung</th>
+                    <th>Warum?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Einfaches Skript aus Anforderungen generieren</strong></td>
+                    <td>✅ Sehr gut</td>
+                    <td>Klare Aufgabe, bekanntes Muster</td>
+                </tr>
+                <tr>
+                    <td><strong>Fehlermeldung erklären und beheben</strong></td>
+                    <td>✅ Gut</td>
+                    <td>Fehlermeldungen sind eindeutig und kontextreich</td>
+                </tr>
+                <tr>
+                    <td><strong>Unbekannte Namen zuverlässig erkennen</strong></td>
+                    <td>⚠️ Schwach</td>
+                    <td>Keine NER-Fähigkeit ohne spezielles Modell</td>
+                </tr>
+                <tr>
+                    <td><strong>Code auf Sicherheitslücken prüfen</strong></td>
+                    <td>⚠️ Bedingt</td>
+                    <td>Offensichtliche Fehler ja – subtile nein</td>
+                </tr>
+                <tr>
+                    <td><strong>Komplexe, mehrstufige Algorithmen</strong></td>
+                    <td>❌ Unsicher</td>
+                    <td>Ergebnis immer manuell testen</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <!-- Zusatzaufgaben -->
+        <h2 class="section-title">Zusatzaufgaben</h2>
+
+        <div class="box box-yellow">
+            <strong>➕ Wenn Sie schneller fertig sind</strong>
+            <ul>
+                <li>Das Skript so erweitern, dass es alle <code>.txt</code>-Dateien in einem Ordner auf einmal verarbeitet</li>
+                <li>Eine Liste bekannter Namen aus einer separaten Datei einlesen und gezielt ersetzen lassen</li>
+                <li>Das Skript in eine kurze Funktion umbauen und mit dem Modell Unit-Tests dafür generieren lassen</li>
+                <li>Dasselbe Skript in einer anderen Sprache generieren lassen (z. B. Bash oder JavaScript) – Vergleich der Ergebnisse</li>
+            </ul>
+        </div>
+
+        <!-- Reflexion -->
+        <div class="box box-green">
+            <strong>🗣️ Reflexionsfragen für die Gruppe</strong>
+            <ul>
+                <li>Wie viel Zeit hätte das Skript ohne LLM-Unterstützung gekostet?</li>
+                <li>Haben Sie den Code wirklich verstanden – oder nur ausgeführt? Was ist der Unterschied?</li>
+                <li>Wie gehen Sie damit um, wenn das LLM funktionierenden, aber unsicheren Code liefert?</li>
+                <li>Wann ist der Einsatz eines LLMs als Programmierhilfe im Schulbetrieb sinnvoll?</li>
+            </ul>
+        </div>
+
+        <!-- Erwartetes Ergebnis -->
+        <div class="box box-blue">
+            <strong>✅ Erwartetes Ergebnis</strong>
+            <ul>
+                <li>Ein lauffähiges Python-Skript zur Textanonymisierung</li>
+                <li>Konkrete Erfahrung mit dem iterativen Arbeiten: generieren → testen → nachfragen</li>
+                <li>Einschätzung: Wo hilft das LLM beim Coden wirklich – und wo bleibt eigenes Urteil unverzichtbar?</li>
+            </ul>
+        </div>
+
+    </div><!-- /page-body -->
+
+    <div class="page-footer">
+        <a href="beispiel-c.html">← Beispiel C</a>
+        <a href="beispiel-e.html">Beispiel E →</a>
+    </div>
+
+</div><!-- /page -->
+
+<script>
+    function copyCmd(btn, text) {
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = '✅ Kopiert!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '📋 Kopieren';
+                btn.classList.remove('copied');
+            }, 2200);
+        }).catch(() => {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.cssText = 'position:fixed;opacity:0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            btn.textContent = '✅ Kopiert!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '📋 Kopieren';
+                btn.classList.remove('copied');
+            }, 2200);
+        });
+    }
+</script>
+
+</body>
+</html>

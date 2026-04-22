@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beispiel F: MCP – Lokale LLMs mit Werkzeugen verbinden</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.1rem;
+            line-height: 1.85;
+            color: #222;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 3rem 10%;
+        }
+
+        .page {
+            max-width: 100%;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+            overflow: hidden;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 2.5rem 3rem;
+        }
+        .page-header .label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+        }
+        .page-header h1 { font-size: 1.9rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .page-header p  { font-size: 1.05rem; opacity: 0.85; }
+
+        /* ── Inhalt ── */
+        .page-body { padding: 3rem 3.5rem; }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e3c72;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+            margin: 3rem 0 1.8rem 0;
+        }
+        .section-title:first-of-type { margin-top: 0; }
+
+        p { margin: 0.8rem 0; }
+        ul, ol { padding-left: 1.6rem; margin: 0.8rem 0; }
+        li { margin: 0.45rem 0; }
+
+        /* ── Boxen ── */
+        .box {
+            border-radius: 10px;
+            padding: 1.4rem 1.8rem;
+            margin: 1.8rem 0;
+            line-height: 1.85;
+        }
+        .box-blue   { background: #eef4ff; border-left: 4px solid #2a5298; }
+        .box-green  { background: #eaf7ea; border-left: 4px solid #43a047; }
+        .box-yellow { background: #fffbea; border-left: 4px solid #f59e0b; }
+        .box-red    { background: #fff1f0; border-left: 4px solid #e53e3e; }
+        .box-purple { background: #f5f0ff; border-left: 4px solid #7c3aed; }
+        .box-teal   { background: #f0fdfa; border-left: 4px solid #0d9488; }
+        .box strong { display: block; margin-bottom: 0.5rem; }
+        .box ul { padding-left: 1.4rem; margin: 0.5rem 0 0 0; }
+        .box li { margin: 0.4rem 0; }
+
+        /* ── Code-Block ── */
+        .cmd {
+            background: #18243a;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1.4rem 0;
+        }
+        .cmd-label {
+            padding: 0.55rem 1.5rem;
+            background: rgba(255,255,255,0.07);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.8rem;
+            color: #7a99cc;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+        .cmd-code {
+            padding: 1.3rem 1.5rem;
+            font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+            font-size: 0.97rem;
+            color: #9fdfb0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.7;
+        }
+        .cmd-json .cmd-code  { color: #c5e1ff; }
+        .cmd-python .cmd-code { color: #ffd580; }
+        .cmd-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0.55rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #9ab4d8;
+            border-radius: 6px;
+            padding: 0.3rem 0.95rem;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: background 0.18s, color 0.18s;
+        }
+        .copy-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+        .copy-btn.copied { background: #2e7d32; border-color: #4caf50; color: #fff; }
+
+        code {
+            background: #eef2ff;
+            color: #1e3c72;
+            padding: 0.15em 0.45em;
+            border-radius: 4px;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            font-size: 0.92em;
+        }
+
+        /* ── Schritte ── */
+        .step {
+            display: flex;
+            gap: 1.2rem;
+            align-items: flex-start;
+            margin: 2rem 0;
+        }
+        .step-num {
+            flex-shrink: 0;
+            width: 2.4rem;
+            height: 2.4rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0.15rem;
+            box-shadow: 0 3px 10px rgba(30,60,114,0.3);
+        }
+        .step-body { flex: 1; }
+        .step-body h4 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1e3c72;
+            margin-bottom: 0.4rem;
+        }
+        .step-body p { margin: 0.4rem 0; }
+        .step-body .cmd { margin-top: 0.8rem; }
+
+        /* ── Ablauf-Diagramm ── */
+        .flow {
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        .flow-item {
+            flex: 1;
+            min-width: 110px;
+            background: #eef4ff;
+            border: 2px solid #c7d7f5;
+            border-radius: 10px;
+            padding: 1rem 1rem;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .flow-item .flow-icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
+        .flow-item strong { display: block; color: #1e3c72; font-size: 0.93rem; }
+        .flow-item span { color: #555; font-size: 0.82rem; }
+        .flow-arrow {
+            display: flex;
+            align-items: center;
+            padding: 0 0.4rem;
+            color: #667eea;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        /* ── Beispiel-Sektionen (farbige Rahmenkarte) ── */
+        .example-card {
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            overflow: hidden;
+            margin: 2.5rem 0;
+        }
+        .example-card-header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 1.2rem 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .example-card-header .ex-icon { font-size: 2rem; }
+        .example-card-header h3 { font-size: 1.2rem; font-weight: 700; margin: 0; }
+        .example-card-header p  { font-size: 0.92rem; opacity: 0.8; margin: 0.2rem 0 0 0; }
+        .example-card-body { padding: 1.6rem 1.8rem; }
+
+        /* ── Prompt-Level ── */
+        .prompt-level {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 1.5rem 0;
+        }
+        .prompt-level-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.9rem 1.5rem;
+            background: #f8faff;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .level-1 .level-badge { background: #ffe0e0; color: #c62828; }
+        .level-2 .level-badge { background: #fff8e0; color: #c27d00; }
+        .level-3 .level-badge { background: #e0f5e0; color: #276227; }
+        .level-4 .level-badge { background: #e0eeff; color: #1a4fa0; }
+        .prompt-level-header h4 { color: #1e3c72; font-size: 1rem; font-weight: 700; }
+        .prompt-level-header p  { color: #666; font-size: 0.93rem; margin: 0; }
+        .prompt-level .cmd { margin: 0; border-radius: 0; }
+        .prompt-level .cmd-label { display: none; }
+
+        /* ── Tabelle ── */
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 1rem;
+        }
+        .result-table th {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 0.9rem 1.2rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        .result-table td {
+            padding: 0.85rem 1.2rem;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        .result-table tr:nth-child(even) td { background: #f8f9fa; }
+        .result-table tr:hover td { background: #eef4ff; }
+
+        hr { border: none; border-top: 2px solid #eef0f5; margin: 3.5rem 0; }
+
+        /* ── Footer ── */
+        .page-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.6rem 3.5rem;
+            border-top: 2px solid #eef0f5;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        .page-footer a {
+            color: #2a5298;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .page-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            body { padding: 1.2rem 0.8rem; }
+            .page-body { padding: 2rem 1.5rem; }
+            .page-header { padding: 2rem 1.5rem; }
+            .page-header h1 { font-size: 1.6rem; }
+            .page-footer { flex-direction: column; gap: 0.6rem; padding: 1.4rem 1.5rem; }
+            .flow { flex-direction: column; }
+            .flow-arrow { transform: rotate(90deg); align-self: center; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <div class="label">Teilnehmerarbeit · Beispiel F</div>
+        <h1>MCP – Lokale LLMs mit Werkzeugen verbinden</h1>
+        <p>Das Modell bekommt Zugriff auf Echtzeit-Daten, Dokumentationen und das Web – vollständig lokal steuerbar.</p>
+    </div>
+
+    <div class="page-body">
+
+        <!-- Aufgabe -->
+        <div class="box box-green">
+            <strong>🎯 Aufgabe</strong>
+            <ul>
+                <li>Verstehen, was MCP ist und wie es ein LLM mit externen Werkzeugen verbindet</li>
+                <li>Beispiel 1: Einen einfachen lokalen Zeitserver als MCP-Tool einrichten und befragen</li>
+                <li>Beispiel 2: Context7 als MCP-Server nutzen – aktuelle Bibliotheksdokumentationen abfragen</li>
+                <li>Beispiel 3: Websuche per MCP – das lokale Modell recherchiert im Internet</li>
+            </ul>
+        </div>
+
+        <div class="box box-purple">
+            <strong>📖 Was ist MCP?</strong>
+            Das <strong>Model Context Protocol (MCP)</strong> ist ein offener Standard von Anthropic (2024),
+            der definiert, wie ein LLM mit externen Werkzeugen – sogenannten <em>MCP-Servern</em> – kommuniziert.
+            Statt Daten nur aus dem Trainings-Wissen zu ziehen, kann das Modell aktiv Werkzeuge aufrufen:
+            Uhrzeiten abfragen, Code ausführen, Webseiten laden, Datenbanken abfragen.
+            Open WebUI unterstützt MCP ab Version 0.5.
+        </div>
+
+        <!-- Ablauf-Diagramm -->
+        <div class="section-title">Wie MCP funktioniert</div>
+
+        <div class="flow">
+            <div class="flow-item">
+                <div class="flow-icon">💬</div>
+                <strong>Ihre Anfrage</strong>
+                <span>„Wie spät ist es?"</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item">
+                <div class="flow-icon">🤖</div>
+                <strong>LLM entscheidet</strong>
+                <span>„Ich brauche ein Tool"</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item">
+                <div class="flow-icon">🔌</div>
+                <strong>Tool-Aufruf</strong>
+                <span>MCP-Client ruft Server auf</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item">
+                <div class="flow-icon">⚙️</div>
+                <strong>MCP-Server</strong>
+                <span>führt Aktion aus</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item">
+                <div class="flow-icon">📨</div>
+                <strong>Ergebnis zurück</strong>
+                <span>ans Modell</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item">
+                <div class="flow-icon">✅</div>
+                <strong>Antwort</strong>
+                <span>mit echten Daten</span>
+            </div>
+        </div>
+
+        <div class="box box-blue">
+            <strong>ℹ️ Voraussetzungen</strong>
+            <ul>
+                <li>Open WebUI ≥ 0.5 mit Ollama (→ Installationsanleitung)</li>
+                <li>Node.js ≥ 18 installiert (<code>node --version</code> zum Prüfen)</li>
+                <li>Python ≥ 3.10 für den Zeitserver</li>
+                <li>Internetverbindung für Beispiel 2 (Context7) und Beispiel 3 (Websuche)</li>
+                <li>Empfohlenes Modell: <code>qwen2.5:7b</code> oder neuer (Tool-Calling-Unterstützung nötig)</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <!-- ══════════ BEISPIEL 1: Zeitserver ══════════ -->
+        <div class="example-card">
+            <div class="example-card-header">
+                <div class="ex-icon">🕐</div>
+                <div>
+                    <h3>Beispiel 1: Lokaler Zeitserver</h3>
+                    <p>Ein einfacher Python-MCP-Server, der dem Modell Datum und Uhrzeit bereitstellt</p>
+                </div>
+            </div>
+            <div class="example-card-body">
+
+                <p>Das Modell kennt von sich aus keine aktuelle Uhrzeit. Mit einem MCP-Zeitserver
+                kann es diese Information jederzeit abrufen – ein ideales erstes Beispiel, weil es
+                keine externe Abhängigkeit hat.</p>
+
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-body">
+                        <h4>MCP-Paket installieren</h4>
+                        <div class="cmd">
+                            <div class="cmd-label">Terminal</div>
+                            <div class="cmd-code" id="install-mcp">pip install mcp</div>
+                            <div class="cmd-footer">
+                                <button class="copy-btn" onclick="copyCmd(this,'install-mcp')">Kopieren</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-body">
+                        <h4>Zeitserver-Skript erstellen</h4>
+                        <p>Speichern Sie folgenden Code als <code>zeitserver.py</code>:</p>
+                        <div class="cmd cmd-python">
+                            <div class="cmd-label">zeitserver.py</div>
+                            <div class="cmd-code" id="zeitserver-py">from mcp.server.fastmcp import FastMCP
+from datetime import datetime
+import pytz
+
+mcp = FastMCP("Zeitserver")
+
+@mcp.tool()
+def get_current_time(timezone: str = "Europe/Berlin") -> str:
+    """Gibt die aktuelle Uhrzeit und das Datum für eine Zeitzone zurück."""
+    try:
+        tz = pytz.timezone(timezone)
+        now = datetime.now(tz)
+        return now.strftime(f"Datum: %d.%m.%Y | Uhrzeit: %H:%M:%S | Zeitzone: {timezone}")
+    except Exception:
+        return f"Unbekannte Zeitzone: {timezone}"
+
+@mcp.tool()
+def get_weekday(timezone: str = "Europe/Berlin") -> str:
+    """Gibt den aktuellen Wochentag zurück."""
+    tz = pytz.timezone(timezone)
+    now = datetime.now(tz)
+    tage = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"]
+    return tage[now.weekday()]
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")</div>
+                            <div class="cmd-footer">
+                                <button class="copy-btn" onclick="copyCmd(this,'zeitserver-py')">Kopieren</button>
+                            </div>
+                        </div>
+                        <div class="cmd">
+                            <div class="cmd-label">Terminal – pytz installieren</div>
+                            <div class="cmd-code" id="install-pytz">pip install pytz</div>
+                            <div class="cmd-footer">
+                                <button class="copy-btn" onclick="copyCmd(this,'install-pytz')">Kopieren</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-body">
+                        <h4>MCP-Server in Open WebUI registrieren</h4>
+                        <p>In Open WebUI: <strong>Einstellungen → Werkzeuge → MCP → + Neuer Server</strong><br>
+                        Tragen Sie folgende Konfiguration ein:</p>
+                        <div class="cmd cmd-json">
+                            <div class="cmd-label">MCP-Konfiguration (Open WebUI)</div>
+                            <div class="cmd-code" id="mcp-zeitserver-config">{
+  "name": "Zeitserver",
+  "transport": "stdio",
+  "command": "python",
+  "args": ["C:/Pfad/zu/zeitserver.py"]
+}</div>
+                            <div class="cmd-footer">
+                                <button class="copy-btn" onclick="copyCmd(this,'mcp-zeitserver-config')">Kopieren</button>
+                            </div>
+                        </div>
+                        <p>Den Pfad zu <code>zeitserver.py</code> entsprechend anpassen.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">4</div>
+                    <div class="step-body">
+                        <h4>Prompts testen</h4>
+                        <div class="prompt-level level-1">
+                            <div class="prompt-level-header">
+                                <div class="level-badge">A</div>
+                                <div>
+                                    <h4>Einfache Zeitabfrage</h4>
+                                    <p>Das Modell soll das Tool automatisch aufrufen</p>
+                                </div>
+                            </div>
+                            <div class="cmd">
+                                <div class="cmd-code" id="prompt-zeit-a">Wie spät ist es gerade in Berlin? Und was ist heute für ein Wochentag?</div>
+                                <div class="cmd-footer">
+                                    <button class="copy-btn" onclick="copyCmd(this,'prompt-zeit-a')">Kopieren</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="prompt-level level-2">
+                            <div class="prompt-level-header">
+                                <div class="level-badge">B</div>
+                                <div>
+                                    <h4>Zeitzonen vergleichen</h4>
+                                    <p>Mehrere Tool-Aufrufe in einer Anfrage</p>
+                                </div>
+                            </div>
+                            <div class="cmd">
+                                <div class="cmd-code" id="prompt-zeit-b">Wie viel Uhr ist es gleichzeitig in Berlin, New York (America/New_York) und Tokio (Asia/Tokyo)?
+Zeige die drei Zeiten als übersichtliche Tabelle.</div>
+                                <div class="cmd-footer">
+                                    <button class="copy-btn" onclick="copyCmd(this,'prompt-zeit-b')">Kopieren</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="box box-yellow">
+                    <strong>💡 Was passiert im Hintergrund?</strong>
+                    In Open WebUI sehen Sie unter der Antwort ein kleines Werkzeug-Symbol.
+                    Klicken Sie darauf – Sie sehen genau, welches Tool das Modell aufgerufen hat
+                    und was der Server zurückgegeben hat. So können Sie die Denkschritte des Modells
+                    transparent nachvollziehen.
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ══════════ BEISPIEL 2: Context7 ══════════ -->
+        <div class="example-card">
+            <div class="example-card-header">
+                <div class="ex-icon">📚</div>
+                <div>
+                    <h3>Beispiel 2: Context7 – aktuelle Dokumentationen</h3>
+                    <p>Das Modell liest Bibliotheks-Docs direkt nach – keine veralteten Trainingsdaten mehr</p>
+                </div>
+            </div>
+            <div class="example-card-body">
+
+                <p>Ein LLM kennt nur Inhalte aus seinem Trainings-Datensatz – Bibliotheken wie
+                Python-Pakete oder Frameworks ändern sich aber ständig. <strong>Context7</strong>
+                ist ein MCP-Server, der auf Anfrage die aktuelle offizielle Dokumentation für
+                Tausende von Bibliotheken abruft und dem Modell als Kontext bereitstellt.</p>
+
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-body">
+                        <h4>Context7 als MCP-Server einrichten</h4>
+                        <p>Context7 läuft als npm-Paket und benötigt eine Internetverbindung.</p>
+                        <div class="cmd">
+                            <div class="cmd-label">Terminal – einmalige Installation prüfen</div>
+                            <div class="cmd-code" id="npx-context7">npx -y @upstash/context7-mcp</div>
+                            <div class="cmd-footer">
+                                <button class="copy-btn" onclick="copyCmd(this,'npx-context7')">Kopieren</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-body">
+                        <h4>In Open WebUI registrieren</h4>
+                        <div class="cmd cmd-json">
+                            <div class="cmd-label">MCP-Konfiguration (Open WebUI)</div>
+                            <div class="cmd-code" id="mcp-context7-config">{
+  "name": "Context7",
+  "transport": "stdio",
+  "command": "npx",
+  "args": ["-y", "@upstash/context7-mcp"]
+}</div>
+                            <div class="cmd-footer">
+                                <button class="copy-btn" onclick="copyCmd(this,'mcp-context7-config')">Kopieren</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-body">
+                        <h4>Context7 im Prompt aktivieren</h4>
+                        <p>Context7 wird automatisch aktiv, wenn Sie <code>use context7</code>
+                        in Ihren Prompt schreiben. Das Modell sucht dann zuerst nach der passenden
+                        Bibliotheksdokumentation.</p>
+
+                        <div class="prompt-level level-1">
+                            <div class="prompt-level-header">
+                                <div class="level-badge">A</div>
+                                <div>
+                                    <h4>Python-Dokumentation abfragen</h4>
+                                    <p>Aktuelle Syntax aus den offiziellen Docs</p>
+                                </div>
+                            </div>
+                            <div class="cmd">
+                                <div class="cmd-code" id="prompt-c7-a">use context7
+
+Wie lese ich eine CSV-Datei mit pandas ein und filtere Zeilen nach einem Spaltenwert?
+Zeige ein vollständiges Beispiel mit der aktuellen pandas-API.</div>
+                                <div class="cmd-footer">
+                                    <button class="copy-btn" onclick="copyCmd(this,'prompt-c7-a')">Kopieren</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="prompt-level level-2">
+                            <div class="prompt-level-header">
+                                <div class="level-badge">B</div>
+                                <div>
+                                    <h4>Framework-Dokumentation</h4>
+                                    <p>Aktuelle Informationen zu einem Webframework</p>
+                                </div>
+                            </div>
+                            <div class="cmd">
+                                <div class="cmd-code" id="prompt-c7-b">use context7
+
+Zeige mir, wie ich in FastAPI einen POST-Endpunkt mit Pydantic-Validierung erstelle.
+Nutze die aktuelle Dokumentation.</div>
+                                <div class="cmd-footer">
+                                    <button class="copy-btn" onclick="copyCmd(this,'prompt-c7-b')">Kopieren</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="prompt-level level-3">
+                            <div class="prompt-level-header">
+                                <div class="level-badge">C</div>
+                                <div>
+                                    <h4>Vergleich: mit und ohne Context7</h4>
+                                    <p>Den Unterschied direkt sehen</p>
+                                </div>
+                            </div>
+                            <div class="cmd">
+                                <div class="cmd-code" id="prompt-c7-c">use context7
+
+Wie installiere ich Ollama per Python SDK und sende eine einfache Chat-Anfrage?
+Ich möchte die aktuelle API-Syntax aus der offiziellen Dokumentation.</div>
+                                <div class="cmd-footer">
+                                    <button class="copy-btn" onclick="copyCmd(this,'prompt-c7-c')">Kopieren</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="box box-teal">
+                    <strong>🔬 Beobachtungsaufgabe</strong>
+                    Stellen Sie denselben Code-Prompt <em>einmal mit</em> und <em>einmal ohne</em>
+                    <code>use context7</code>. Vergleichen Sie:
+                    <ul>
+                        <li>Ist die zurückgegebene API-Syntax identisch?</li>
+                        <li>Welche Version der Bibliothek referenziert das Modell?</li>
+                        <li>Wie verhält sich das Modell, wenn die Bibliothek sehr neu ist?</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ══════════ BEISPIEL 3: Websuche ══════════ -->
+        <div class="example-card">
+            <div class="example-card-header">
+                <div class="ex-icon">🌐</div>
+                <div>
+                    <h3>Beispiel 3: Websuche per MCP</h3>
+                    <p>Das lokale Modell recherchiert im Internet – Ergebnisse bleiben auf Ihrem Rechner</p>
+                </div>
+            </div>
+            <div class="example-card-body">
+
+                <p>Mit einem Such-MCP-Server kann das Modell aktuelle Informationen aus dem Web
+                abrufen. Die Suchergebnisse werden lokal verarbeitet – keine Daten gelangen an
+                externe KI-Dienste. Hier verwenden wir <strong>Brave Search MCP</strong> (kostenloser API-Key)
+                und als Alternative den <strong>DuckDuckGo MCP-Server</strong> ohne API-Key.</p>
+
+                <div class="box box-yellow">
+                    <strong>⚠️ Datenschutz-Hinweis</strong>
+                    Die Suchanfragen selbst gehen an den Suchanbieter (Brave bzw. DuckDuckGo).
+                    Die <em>Verarbeitung</em> der Ergebnisse findet vollständig lokal statt.
+                    Keine personenbezogenen Daten in Suchanfragen eingeben.
+                </div>
+
+                <h4 style="color:#1e3c72; margin: 1.5rem 0 0.8rem 0; font-size:1.05rem;">Option A: DuckDuckGo (kein API-Key nötig)</h4>
+
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-body">
+                        <h4>DuckDuckGo MCP-Server einrichten</h4>
+                        <div class="cmd cmd-json">
+                            <div class="cmd-label">MCP-Konfiguration (Open WebUI)</div>
+                            <div class="cmd-code" id="mcp-ddg-config">{
+  "name": "DuckDuckGo Suche",
+  "transport": "stdio",
+  "command": "uvx",
+  "args": ["duckduckgo-mcp-server"]
+}</div>
+                            <div class="cmd-footer">
+                                <button class="copy-btn" onclick="copyCmd(this,'mcp-ddg-config')">Kopieren</button>
+                            </div>
+                        </div>
+                        <div class="cmd">
+                            <div class="cmd-label">Terminal – uv installieren (falls nicht vorhanden)</div>
+                            <div class="cmd-code" id="install-uv">pip install uv</div>
+                            <div class="cmd-footer">
+                                <button class="copy-btn" onclick="copyCmd(this,'install-uv')">Kopieren</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h4 style="color:#1e3c72; margin: 1.5rem 0 0.8rem 0; font-size:1.05rem;">Option B: Brave Search (höhere Qualität, API-Key erforderlich)</h4>
+
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-body">
+                        <h4>Kostenlosen API-Key holen</h4>
+                        <p>Registrierung unter <strong>brave.com/search/api</strong> – Free Tier: 2.000 Anfragen/Monat,
+                        keine Kreditkarte nötig.</p>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-body">
+                        <h4>Brave MCP-Server konfigurieren</h4>
+                        <div class="cmd cmd-json">
+                            <div class="cmd-label">MCP-Konfiguration (Open WebUI)</div>
+                            <div class="cmd-code" id="mcp-brave-config">{
+  "name": "Brave Suche",
+  "transport": "stdio",
+  "command": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+  "env": {
+    "BRAVE_API_KEY": "IHR-API-KEY-HIER"
+  }
+}</div>
+                            <div class="cmd-footer">
+                                <button class="copy-btn" onclick="copyCmd(this,'mcp-brave-config')">Kopieren</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-body">
+                        <h4>Websuche-Prompts testen</h4>
+
+                        <div class="prompt-level level-1">
+                            <div class="prompt-level-header">
+                                <div class="level-badge">A</div>
+                                <div>
+                                    <h4>Aktuelle Neuigkeit</h4>
+                                    <p>Eine Information, die das Modell nicht kennen kann</p>
+                                </div>
+                            </div>
+                            <div class="cmd">
+                                <div class="cmd-code" id="prompt-web-a">Suche im Web nach aktuellen Neuigkeiten zu lokalen Sprachmodellen (LLM) aus den letzten 7 Tagen.
+Fasse die drei wichtigsten Meldungen auf Deutsch zusammen.</div>
+                                <div class="cmd-footer">
+                                    <button class="copy-btn" onclick="copyCmd(this,'prompt-web-a')">Kopieren</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="prompt-level level-2">
+                            <div class="prompt-level-header">
+                                <div class="level-badge">B</div>
+                                <div>
+                                    <h4>Faktenfrage mit Quellenangabe</h4>
+                                    <p>Überprüfbare Recherche mit Belegen</p>
+                                </div>
+                            </div>
+                            <div class="cmd">
+                                <div class="cmd-code" id="prompt-web-b">Suche im Web: Welche KI-Regelungen gelten aktuell für Schulen in Deutschland laut dem EU AI Act?
+Gib die Quelle (URL) mit an und erkläre die wichtigsten Punkte in einfacher Sprache.</div>
+                                <div class="cmd-footer">
+                                    <button class="copy-btn" onclick="copyCmd(this,'prompt-web-b')">Kopieren</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="prompt-level level-3">
+                            <div class="prompt-level-header">
+                                <div class="level-badge">C</div>
+                                <div>
+                                    <h4>Rechercheaufgabe für den Unterricht</h4>
+                                    <p>Aktueller Anlass für eine Unterrichtsstunde</p>
+                                </div>
+                            </div>
+                            <div class="cmd">
+                                <div class="cmd-code" id="prompt-web-c">Suche im Web nach einem aktuellen Nachrichtenartikel über ein technisches Thema,
+das für Auszubildende im IT-Bereich relevant ist.
+Fasse den Artikel in 5 Stichpunkten zusammen und formuliere zwei Lernfragen daraus,
+die sich für den Unterrichtseinstieg eignen.</div>
+                                <div class="cmd-footer">
+                                    <button class="copy-btn" onclick="copyCmd(this,'prompt-web-c')">Kopieren</button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Vergleichstabelle -->
+        <div class="section-title">Überblick: Welches MCP-Werkzeug wofür?</div>
+
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>MCP-Server</th>
+                    <th>Zugang</th>
+                    <th>Typische Aufgabe</th>
+                    <th>Datenschutz</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Zeitserver (lokal)</td>
+                    <td>Kein Internet</td>
+                    <td>Datum, Uhrzeit, Zeitzone</td>
+                    <td>✅ Vollständig lokal</td>
+                </tr>
+                <tr>
+                    <td>Context7</td>
+                    <td>Internet</td>
+                    <td>Aktuelle Bibliotheks-Docs abrufen</td>
+                    <td>⚠️ Bibliotheksname wird gesendet</td>
+                </tr>
+                <tr>
+                    <td>DuckDuckGo Suche</td>
+                    <td>Internet</td>
+                    <td>Allgemeine Websuche</td>
+                    <td>⚠️ Suchanfrage geht an DDG</td>
+                </tr>
+                <tr>
+                    <td>Brave Search</td>
+                    <td>Internet + API-Key</td>
+                    <td>Qualitativ hochwertige Websuche</td>
+                    <td>⚠️ Suchanfrage geht an Brave</td>
+                </tr>
+                <tr>
+                    <td>Filesystem MCP</td>
+                    <td>Lokal</td>
+                    <td>Dateien lesen/schreiben</td>
+                    <td>✅ Vollständig lokal</td>
+                </tr>
+                <tr>
+                    <td>SQLite MCP</td>
+                    <td>Lokal</td>
+                    <td>Datenbankabfragen auf lokalen DBs</td>
+                    <td>✅ Vollständig lokal</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <!-- Reflexion -->
+        <div class="section-title">Reflexionsfragen</div>
+
+        <div class="box box-yellow">
+            <strong>💬 Diskutieren Sie in der Gruppe</strong>
+            <ul>
+                <li>Welche MCP-Werkzeuge wären für Ihren Schulalltag am nützlichsten?</li>
+                <li>Was ändert sich an der Verlässlichkeit von Antworten, wenn das Modell Werkzeuge nutzt?</li>
+                <li>Wie unterscheidet sich MCP von RAG – wann würden Sie welches Verfahren wählen?</li>
+                <li>Welche Sicherheitsrisiken entstehen, wenn ein Modell Dateien lesen und schreiben darf?</li>
+            </ul>
+        </div>
+
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>Ansatz</th>
+                    <th>Stärke</th>
+                    <th>Schwäche</th>
+                    <th>Wann einsetzen?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Normaler Chat</td>
+                    <td>Einfach, schnell</td>
+                    <td>Nur Trainingswissen, veraltet</td>
+                    <td>Allgemeine Fragen, Texterstellung</td>
+                </tr>
+                <tr>
+                    <td>RAG</td>
+                    <td>Eigene Dokumente als Basis</td>
+                    <td>Dokumente müssen vorab hochgeladen werden</td>
+                    <td>Fragen zu eigenem Schulmaterial</td>
+                </tr>
+                <tr>
+                    <td>MCP</td>
+                    <td>Echtzeit-Daten, aktive Aktionen</td>
+                    <td>Technisches Setup erforderlich</td>
+                    <td>Aktuelle Daten, Websuche, Automatisierung</td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div><!-- /page-body -->
+
+    <div class="page-footer">
+        <a href="beispiel-e.html">← Beispiel E</a>
+        <a href="aufgaben.html">Zur Aufgabenübersicht</a>
+    </div>
+
+</div><!-- /page -->
+
+<script>
+    function copyCmd(btn, id) {
+        const el = document.getElementById(id);
+        const text = el.textContent;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => flash(btn));
+        } else {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            flash(btn);
+        }
+    }
+    function flash(btn) {
+        btn.textContent = '✓ Kopiert';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 2000);
+    }
+</script>
+</body>
+</html>

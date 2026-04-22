@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beispiel E: RAG – Fragen an eigene Dokumente</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.1rem;
+            line-height: 1.85;
+            color: #222;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 3rem 10%;
+        }
+
+        .page {
+            max-width: 100%;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+            overflow: hidden;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 2.5rem 3rem;
+        }
+        .page-header .label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+        }
+        .page-header h1 { font-size: 1.9rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .page-header p  { font-size: 1.05rem; opacity: 0.85; }
+
+        /* ── Inhalt ── */
+        .page-body { padding: 3rem 3.5rem; }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e3c72;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+            margin: 3rem 0 1.8rem 0;
+        }
+        .section-title:first-of-type { margin-top: 0; }
+
+        p { margin: 0.8rem 0; }
+        ul, ol { padding-left: 1.6rem; margin: 0.8rem 0; }
+        li { margin: 0.45rem 0; }
+
+        /* ── Boxen ── */
+        .box {
+            border-radius: 10px;
+            padding: 1.4rem 1.8rem;
+            margin: 1.8rem 0;
+            line-height: 1.85;
+        }
+        .box-blue   { background: #eef4ff; border-left: 4px solid #2a5298; }
+        .box-green  { background: #eaf7ea; border-left: 4px solid #43a047; }
+        .box-yellow { background: #fffbea; border-left: 4px solid #f59e0b; }
+        .box-red    { background: #fff1f0; border-left: 4px solid #e53e3e; }
+        .box-purple { background: #f5f0ff; border-left: 4px solid #7c3aed; }
+        .box strong { display: block; margin-bottom: 0.5rem; }
+        .box ul { padding-left: 1.4rem; margin: 0.5rem 0 0 0; }
+        .box li { margin: 0.4rem 0; }
+
+        /* ── Code-Block ── */
+        .cmd {
+            background: #18243a;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1.4rem 0;
+        }
+        .cmd-label {
+            padding: 0.55rem 1.5rem;
+            background: rgba(255,255,255,0.07);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.8rem;
+            color: #7a99cc;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+        .cmd-code {
+            padding: 1.3rem 1.5rem;
+            font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+            font-size: 0.97rem;
+            color: #9fdfb0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.7;
+        }
+        .cmd-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0.55rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #9ab4d8;
+            border-radius: 6px;
+            padding: 0.3rem 0.95rem;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: background 0.18s, color 0.18s;
+        }
+        .copy-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+        .copy-btn.copied { background: #2e7d32; border-color: #4caf50; color: #fff; }
+
+        code {
+            background: #eef2ff;
+            color: #1e3c72;
+            padding: 0.15em 0.45em;
+            border-radius: 4px;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            font-size: 0.92em;
+        }
+
+        /* ── Schritte ── */
+        .step {
+            display: flex;
+            gap: 1.2rem;
+            align-items: flex-start;
+            margin: 2rem 0;
+        }
+        .step-num {
+            flex-shrink: 0;
+            width: 2.4rem;
+            height: 2.4rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0.15rem;
+            box-shadow: 0 3px 10px rgba(30,60,114,0.3);
+        }
+        .step-body { flex: 1; }
+        .step-body h4 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1e3c72;
+            margin-bottom: 0.4rem;
+        }
+        .step-body p { margin: 0.4rem 0; }
+        .step-body .cmd { margin-top: 0.8rem; }
+
+        /* ── Ablauf-Diagramm ── */
+        .flow {
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        .flow-item {
+            flex: 1;
+            min-width: 120px;
+            background: #eef4ff;
+            border: 2px solid #c7d7f5;
+            border-radius: 10px;
+            padding: 1rem 1.2rem;
+            text-align: center;
+            font-size: 0.92rem;
+        }
+        .flow-item .flow-icon { font-size: 1.8rem; margin-bottom: 0.4rem; }
+        .flow-item strong { display: block; color: #1e3c72; font-size: 0.95rem; }
+        .flow-item span { color: #555; font-size: 0.85rem; }
+        .flow-arrow {
+            display: flex;
+            align-items: center;
+            padding: 0 0.4rem;
+            color: #667eea;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        /* ── Prompt-Level ── */
+        .prompt-level {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+        .prompt-level-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: #f8faff;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .level-1 .level-badge { background: #ffe0e0; color: #c62828; }
+        .level-2 .level-badge { background: #fff8e0; color: #c27d00; }
+        .level-3 .level-badge { background: #e0f5e0; color: #276227; }
+        .level-4 .level-badge { background: #e0eeff; color: #1a4fa0; }
+        .prompt-level-header h4 { color: #1e3c72; font-size: 1.05rem; font-weight: 700; }
+        .prompt-level-header p  { color: #666; font-size: 0.95rem; margin: 0; }
+        .prompt-level .cmd { margin: 0; border-radius: 0; }
+        .prompt-level .cmd-label { display: none; }
+
+        /* ── Tabelle ── */
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 1rem;
+        }
+        .result-table th {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 0.9rem 1.2rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        .result-table td {
+            padding: 0.85rem 1.2rem;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        .result-table tr:nth-child(even) td { background: #f8f9fa; }
+        .result-table tr:hover td { background: #eef4ff; }
+
+        hr { border: none; border-top: 2px solid #eef0f5; margin: 3.5rem 0; }
+
+        /* ── Footer ── */
+        .page-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.6rem 3.5rem;
+            border-top: 2px solid #eef0f5;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        .page-footer a {
+            color: #2a5298;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .page-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            body { padding: 1.2rem 0.8rem; }
+            .page-body { padding: 2rem 1.5rem; }
+            .page-header { padding: 2rem 1.5rem; }
+            .page-header h1 { font-size: 1.6rem; }
+            .page-footer { flex-direction: column; gap: 0.6rem; padding: 1.4rem 1.5rem; }
+            .flow { flex-direction: column; }
+            .flow-arrow { transform: rotate(90deg); align-self: center; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <div class="label">Teilnehmerarbeit · Beispiel E</div>
+        <h1>RAG – Fragen an eigene Dokumente stellen</h1>
+        <p>Eigene Schulunterlagen als Wissensbasis nutzen – ohne Daten in die Cloud zu schicken.</p>
+    </div>
+
+    <div class="page-body">
+
+        <!-- Aufgabe -->
+        <div class="box box-green">
+            <strong>🎯 Aufgabe</strong>
+            <ul>
+                <li>Verstehen, was RAG ist und wie es sich von einem normalen Chat unterscheidet</li>
+                <li>Eigene Dokumente (z.&nbsp;B. Schulordnung, Lehrplan, Ausbildungsrahmenplan) in Open WebUI hochladen</li>
+                <li>Das Modell gezielt zu diesen Inhalten befragen und die Antworten mit dem Original vergleichen</li>
+                <li>Grenzen von RAG kennenlernen (falsche Quellenangaben, Halluzinationen)</li>
+            </ul>
+        </div>
+
+        <div class="box box-purple">
+            <strong>📖 Was ist RAG?</strong>
+            <strong style="display:inline; font-weight:400;">RAG</strong> steht für <strong>Retrieval-Augmented Generation</strong>.
+            Das Modell bekommt beim Beantworten einer Frage automatisch passende Textabschnitte aus Ihren Dokumenten
+            als zusätzlichen Kontext mitgeliefert – es „liest" also gerade eben nach, bevor es antwortet.
+            Dadurch kann das Modell auch Inhalte korrekt wiedergeben, die es im Training nie gesehen hat.
+        </div>
+
+        <!-- Ablauf-Diagramm -->
+        <div class="section-title">So funktioniert RAG</div>
+
+        <div class="flow">
+            <div class="flow-item">
+                <div class="flow-icon">📄</div>
+                <strong>Dokument hochladen</strong>
+                <span>PDF, DOCX, TXT …</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item">
+                <div class="flow-icon">✂️</div>
+                <strong>Chunking</strong>
+                <span>Text wird in Abschnitte zerlegt</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item">
+                <div class="flow-icon">🔢</div>
+                <strong>Embedding</strong>
+                <span>Abschnitte als Zahlen-Vektoren gespeichert</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item">
+                <div class="flow-icon">❓</div>
+                <strong>Ihre Frage</strong>
+                <span>Wird ebenfalls zu Vektoren</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item">
+                <div class="flow-icon">🔍</div>
+                <strong>Ähnlichkeitssuche</strong>
+                <span>Passendste Abschnitte werden gefunden</span>
+            </div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-item">
+                <div class="flow-icon">🤖</div>
+                <strong>Antwort</strong>
+                <span>Modell antwortet mit Kontext</span>
+            </div>
+        </div>
+
+        <div class="box box-blue">
+            <strong>ℹ️ Voraussetzung: Open WebUI mit Ollama</strong>
+            <ul>
+                <li>Open WebUI muss laufen und mit Ollama verbunden sein (→ Installationsanleitung)</li>
+                <li>Empfohlenes Modell für RAG: <code>qwen2.5:7b</code> oder <code>mistral-nemo</code></li>
+                <li>Embedding-Modell in Open WebUI: <code>nomic-embed-text</code> (automatisch von Ollama geladen)</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <!-- Schritt 1 -->
+        <div class="section-title">Schritt 1: Embedding-Modell einrichten</div>
+
+        <p>Open WebUI benötigt ein separates Embedding-Modell, um Dokumente zu indexieren.
+        Laden Sie es einmalig mit folgendem Befehl:</p>
+
+        <div class="cmd">
+            <div class="cmd-label">Terminal / Eingabeaufforderung</div>
+            <div class="cmd-code" id="cmd-embed">ollama pull nomic-embed-text</div>
+            <div class="cmd-footer">
+                <button class="copy-btn" onclick="copyCmd(this, 'cmd-embed')">Kopieren</button>
+            </div>
+        </div>
+
+        <p>Danach in Open WebUI: <strong>Einstellungen → Dokumente → Embedding-Modell</strong> auf
+        <code>nomic-embed-text</code> setzen und speichern.</p>
+
+        <hr>
+
+        <!-- Schritt 2 -->
+        <div class="section-title">Schritt 2: Dokument hochladen</div>
+
+        <p>Für diese Übung verwenden wir ein fiktives Dokument: einen Auszug aus einer
+        Schulordnung. Speichern Sie den folgenden Text als <code>schulordnung.txt</code> und laden Sie
+        ihn in Open WebUI hoch.</p>
+
+        <div class="cmd cmd-example">
+            <div class="cmd-label">Beispieldokument – schulordnung.txt</div>
+            <div class="cmd-code" id="dokument-schulordnung">Schulordnung der Berufsbildenden Schule Musterstadt
+Stand: August 2025
+
+§ 1 Geltungsbereich
+Diese Schulordnung gilt für alle Schülerinnen und Schüler der BBS Musterstadt sowie für alle Personen,
+die das Schulgelände betreten.
+
+§ 2 Unterrichtspflicht
+(1) Alle Schülerinnen und Schüler sind verpflichtet, regelmäßig und pünktlich am Unterricht teilzunehmen.
+(2) Fehlzeiten sind am ersten Fehltag telefonisch der Schule mitzuteilen. Ein schriftlicher Nachweis
+    (Entschuldigung der Erziehungsberechtigten oder ärztliches Attest) ist innerhalb von drei Werktagen
+    nach Rückkehr vorzulegen.
+(3) Unentschuldigte Fehlzeiten werden im Zeugnis ausgewiesen und können zur Nichtversetzung führen.
+
+§ 3 Mobiltelefone und elektronische Geräte
+(1) Die Nutzung von Mobiltelefonen ist während des Unterrichts nicht gestattet, sofern die Lehrkraft
+    dies nicht ausdrücklich für Unterrichtszwecke erlaubt.
+(2) In Prüfungssituationen sind Mobiltelefone und Smartwatches vollständig auszuschalten und im Rucksack
+    zu verstauen. Ein Verstoß gilt als Täuschungsversuch.
+(3) Auf dem Schulgelände gilt außerhalb des Unterrichts ein Fotografier- und Filmverbot ohne ausdrückliche
+    Zustimmung der abgebildeten Personen.
+
+§ 4 Hausordnung
+(1) Essen und Trinken ist nur in den Pausen und ausschließlich in der Cafeteria sowie auf den gekennzeichneten
+    Außenflächen erlaubt.
+(2) Das gesamte Schulgelände ist rauchfreie Zone. Dies gilt auch für E-Zigaretten.
+(3) Fahrräder und Kraftfahrzeuge sind nur auf den ausgewiesenen Stellflächen abzustellen.
+
+§ 5 Umgang miteinander
+(1) Alle Angehörigen der Schulgemeinschaft behandeln sich gegenseitig mit Respekt und Wertschätzung.
+(2) Diskriminierung, Beleidigung, Mobbing und Gewalt – auch in digitaler Form – werden nicht toleriert
+    und können zu schulrechtlichen Maßnahmen führen.
+(3) Bei Konflikten steht die Schulsozialarbeit als Anlaufstelle zur Verfügung (Raum B112, Di + Do 8–13 Uhr).
+
+§ 6 Schulveranstaltungen und Klassenfahrten
+(1) Die Teilnahme an Pflichtveranstaltungen (z. B. Betriebspraktika, Prüfungsvorbereitungstage) ist verbindlich.
+(2) Eigenmächtiges Verlassen von Schulveranstaltungen ohne Genehmigung der Lehrkraft ist untersagt.
+(3) Bei mehrtägigen Veranstaltungen können die Erziehungsberechtigten eine Befreiung aus triftigen Gründen
+    beantragen.
+
+§ 7 Datenschutz
+(1) Die Schule verarbeitet personenbezogene Daten der Schülerinnen und Schüler ausschließlich im Rahmen
+    ihrer gesetzlichen Aufgaben gemäß DSGVO und NDSG.
+(2) Die Weitergabe von Schülerdaten an Dritte erfolgt nur mit ausdrücklicher schriftlicher Zustimmung
+    der Erziehungsberechtigten bzw. volljähriger Schülerinnen und Schüler.
+(3) Lehrkräfte und Schülerinnen/Schüler sind verpflichtet, digitale Kommunikation über schulische
+    Angelegenheiten ausschließlich über die schuleigenen Systeme abzuwickeln.</div>
+            <div class="cmd-footer">
+                <button class="copy-btn" onclick="copyCmd(this, 'dokument-schulordnung')">Kopieren</button>
+            </div>
+        </div>
+
+        <p>Laden Sie die Datei in Open WebUI hoch: <strong>Chat öffnen → Büroklammer-Symbol (📎) → Datei auswählen</strong>.<br>
+        Alternativ: Im Bereich <strong>Wissensdatenbank</strong> eine Sammlung anlegen und dort hochladen.</p>
+
+        <hr>
+
+        <!-- Schritt 3 -->
+        <div class="section-title">Schritt 3: Fragen an das Dokument</div>
+
+        <p>Stellen Sie dem Modell nun Fragen, die nur mit Kenntnis der Schulordnung korrekt beantwortet werden können.
+        Vergleichen Sie: Was antwortet das Modell <em>ohne</em> das Dokument – und <em>mit</em> dem Dokument?</p>
+
+        <!-- Prompt A -->
+        <div class="prompt-level level-1">
+            <div class="prompt-level-header">
+                <div class="level-badge">A</div>
+                <div>
+                    <h4>Einfache Faktenfrage</h4>
+                    <p>Direkte Frage nach einer Regelung aus der Schulordnung</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code" id="prompt-a">Was muss ich tun, wenn ich krank bin und nicht zur Schule kommen kann?
+Beantworte die Frage ausschließlich auf Basis der hochgeladenen Schulordnung und nenne den zugehörigen Paragrafen.</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'prompt-a')">Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prompt B -->
+        <div class="prompt-level level-2">
+            <div class="prompt-level-header">
+                <div class="level-badge">B</div>
+                <div>
+                    <h4>Regelinterpretation</h4>
+                    <p>Das Modell soll eine Situation anhand der Regeln bewerten</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code" id="prompt-b">Ein Schüler hat sein Handy in einer Prüfung in der Hosentasche. Es ist ausgeschaltet.
+Verstößt das gegen die Schulordnung? Begründe mit dem genauen Wortlaut.</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'prompt-b')">Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prompt C -->
+        <div class="prompt-level level-3">
+            <div class="prompt-level-header">
+                <div class="level-badge">C</div>
+                <div>
+                    <h4>Zusammenfassung für eine Zielgruppe</h4>
+                    <p>Relevante Regeln adressatengerecht aufbereiten</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code" id="prompt-c">Erstelle eine kurze, schülerfreundliche Zusammenfassung der wichtigsten Regeln aus der Schulordnung.
+Formuliere sie als 5 Punkte, verständlich für Erstklässler einer BBS (ca. 16 Jahre).
+Stütze dich nur auf den Inhalt des hochgeladenen Dokuments.</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'prompt-c')">Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prompt D -->
+        <div class="prompt-level level-4">
+            <div class="prompt-level-header">
+                <div class="level-badge">D</div>
+                <div>
+                    <h4>Halluzinations-Test</h4>
+                    <p>Frage nach etwas, das im Dokument nicht steht</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code" id="prompt-d">Welche Konsequenzen hat es laut Schulordnung, wenn jemand zu spät zum Unterricht kommt?
+Was passiert bei mehr als drei Verspätungen pro Monat?</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'prompt-d')">Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="box box-yellow">
+            <strong>💡 Was beobachten Sie bei Prompt D?</strong>
+            Die Schulordnung enthält keine Regelung zu Verspätungen. Gut konfigurierte RAG-Systeme antworten:
+            <em>„Das Dokument enthält dazu keine Informationen."</em> – aber manche Modelle erfinden trotzdem eine Antwort.
+            Das nennt man <strong>Halluzination</strong> – ein zentrales Problem beim LLM-Einsatz.
+        </div>
+
+        <hr>
+
+        <!-- Schritt 4 -->
+        <div class="section-title">Schritt 4: Vergleich ohne und mit RAG</div>
+
+        <p>Testen Sie denselben Prompt einmal <strong>ohne</strong> das hochgeladene Dokument (leerer Chat)
+        und einmal <strong>mit</strong> dem Dokument. Halten Sie die Unterschiede in der Tabelle fest:</p>
+
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>Kriterium</th>
+                    <th>Ohne RAG</th>
+                    <th>Mit RAG</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Antwortet mit konkreten Paragrafen?</td>
+                    <td>Eher nicht</td>
+                    <td>Ja – mit Quellenangabe</td>
+                </tr>
+                <tr>
+                    <td>Inhalt korrekt laut Dokument?</td>
+                    <td>Oft allgemein/generisch</td>
+                    <td>Zitiert aus dem Dokument</td>
+                </tr>
+                <tr>
+                    <td>Halluziniert nicht vorhandene Regeln?</td>
+                    <td>Häufig</td>
+                    <td>Seltener (bei gutem Setup)</td>
+                </tr>
+                <tr>
+                    <td>Gibt an, wenn Infos fehlen?</td>
+                    <td>Selten</td>
+                    <td>Häufiger</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <!-- Eigene Dokumente -->
+        <div class="section-title">Zusatzaufgabe: Eigene Dokumente einbinden</div>
+
+        <div class="box box-blue">
+            <strong>ℹ️ Welche Dokumente eignen sich für RAG im BBS-Kontext?</strong>
+            <ul>
+                <li>Ausbildungsrahmenpläne (KMK/BIBB) – Fragen zu Lernfeldinhalten beantworten</li>
+                <li>Schulinternes Curriculum – auf Vollständigkeit prüfen lassen</li>
+                <li>Prüfungsordnungen – Regelungen schnell nachschlagen</li>
+                <li>Handbücher und Betriebsanleitungen – technische Fragen klären</li>
+                <li>Anonymisierte Schülerarbeiten – Feedback-Muster ableiten</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+                <h4>Dokument vorbereiten</h4>
+                <p>PDF, DOCX oder TXT – Open WebUI verarbeitet alle drei Formate.
+                Bei PDFs mit eingescannten Seiten (Bilder) funktioniert RAG nur mit OCR-fähigen Modellen (z.&nbsp;B. Qwen2.5-VL).</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+                <h4>Datenschutz prüfen</h4>
+                <p>Enthält das Dokument personenbezogene Daten? Wenn ja: vor dem Hochladen anonymisieren
+                (→ Beispiel C). RAG mit einem lokalen Modell ist datenschutzkonform, solange keine
+                Cloud-Dienste eingebunden sind.</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+                <h4>Wissensdatenbank anlegen</h4>
+                <p>In Open WebUI: <strong>Arbeitsbereich → Wissen → + Neue Wissensdatenbank</strong>.
+                Mehrere Dokumente zu einer Sammlung zusammenfassen (z.&nbsp;B. „Lehrpläne IT")
+                und diese Sammlung im Chat aktivieren.</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+                <h4>Prompt mit Quellenhinweis</h4>
+                <p>Weisen Sie das Modell an, Quellen zu benennen – das erhöht die Überprüfbarkeit:</p>
+                <div class="cmd">
+                    <div class="cmd-code" id="prompt-quelle">Beantworte die folgende Frage ausschließlich auf Basis der bereitgestellten Dokumente.
+Gib am Ende an, aus welchem Abschnitt du die Information entnommen hast.
+Falls die Dokumente keine Antwort enthalten, sage das ausdrücklich.
+
+Frage: [Ihre Frage hier]</div>
+                    <div class="cmd-footer">
+                        <button class="copy-btn" onclick="copyCmd(this, 'prompt-quelle')">Kopieren</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Reflexion -->
+        <div class="section-title">Reflexionsfragen</div>
+
+        <div class="box box-yellow">
+            <strong>💬 Diskutieren Sie in der Gruppe</strong>
+            <ul>
+                <li>In welchen Situationen ist RAG einem normalen Chat klar überlegen?</li>
+                <li>Was passiert, wenn das Quelldokument selbst Fehler enthält – übernimmt das Modell diese?</li>
+                <li>Wäre RAG mit einem Schulserver (ohne Internet) aus Datenschutzsicht unbedenklich?</li>
+                <li>Welche Dokumente Ihrer Schule würden Sie in eine RAG-Wissensbasis aufnehmen wollen?</li>
+            </ul>
+        </div>
+
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>Szenario</th>
+                    <th>RAG geeignet?</th>
+                    <th>Hinweis</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Fragen zu einem konkreten Lehrplan</td>
+                    <td>✅ Ja</td>
+                    <td>Idealer RAG-Anwendungsfall</td>
+                </tr>
+                <tr>
+                    <td>Allgemeines Brainstorming für Unterricht</td>
+                    <td>⚠️ Eingeschränkt</td>
+                    <td>Kein Dokument nötig – normaler Chat reicht</td>
+                </tr>
+                <tr>
+                    <td>Individuelle Schülerbeurteilung erstellen</td>
+                    <td>✅ Ja</td>
+                    <td>Kompetenzraster als Dokument einbinden</td>
+                </tr>
+                <tr>
+                    <td>Aktuelle Nachrichteninhalte abfragen</td>
+                    <td>❌ Nein</td>
+                    <td>Lokale Modelle haben kein Internet-Wissen</td>
+                </tr>
+                <tr>
+                    <td>Schülerdaten auswerten (mit Klarnamen)</td>
+                    <td>⚠️ Nur anon.</td>
+                    <td>Erst anonymisieren (→ Beispiel B/C)</td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div><!-- /page-body -->
+
+    <div class="page-footer">
+        <a href="beispiel-d.html">← Beispiel D</a>
+        <a href="beispiel-f.html">Beispiel F →</a>
+    </div>
+
+</div><!-- /page -->
+
+<script>
+    function copyCmd(btn, id) {
+        const el = document.getElementById(id);
+        const text = el.textContent;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(() => flash(btn));
+        } else {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            flash(btn);
+        }
+    }
+    function flash(btn) {
+        btn.textContent = '✓ Kopiert';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Kopieren'; btn.classList.remove('copied'); }, 2000);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beispiel A: Textzusammenfassung &amp; Strukturierung</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.1rem;
+            line-height: 1.85;
+            color: #222;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 3rem 10%;
+        }
+
+        .page {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+            overflow: hidden;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 2.5rem 3rem;
+        }
+        .page-header .label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+        }
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .page-header p {
+            font-size: 1.05rem;
+            opacity: 0.85;
+        }
+
+        /* ── Inhalt ── */
+        .page-body {
+            padding: 3rem 3.5rem;
+        }
+
+        /* ── Abschnittsüberschrift ── */
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e3c72;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+            margin: 3rem 0 1.8rem 0;
+        }
+        .section-title:first-of-type { margin-top: 0; }
+
+        p { margin: 0.8rem 0; }
+        ul, ol { padding-left: 1.6rem; margin: 0.8rem 0; }
+        li { margin: 0.45rem 0; }
+
+        /* ── Boxen ── */
+        .box {
+            border-radius: 10px;
+            padding: 1.4rem 1.8rem;
+            margin: 1.8rem 0;
+            line-height: 1.85;
+        }
+        .box-blue   { background: #eef4ff; border-left: 4px solid #667eea; }
+        .box-green  { background: #eaf7ea; border-left: 4px solid #43a047; }
+        .box-yellow { background: #fffbea; border-left: 4px solid #f59e0b; }
+        .box-red    { background: #fff1f0; border-left: 4px solid #e53e3e; }
+        .box strong { display: block; margin-bottom: 0.5rem; }
+        .box ul { padding-left: 1.4rem; margin: 0.5rem 0 0 0; }
+        .box li { margin: 0.4rem 0; }
+
+        /* ── Code-Block ── */
+        .cmd {
+            background: #18243a;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1.4rem 0;
+        }
+        .cmd-label {
+            padding: 0.55rem 1.5rem;
+            background: rgba(255,255,255,0.07);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.8rem;
+            color: #7a99cc;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+        .cmd-code {
+            padding: 1.3rem 1.5rem;
+            font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+            font-size: 0.97rem;
+            color: #9fdfb0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.7;
+        }
+        /* Beispieltext-Block: etwas kompakter, damit der längere Text gut lesbar bleibt */
+        .cmd-example .cmd-code {
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        .cmd-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0.55rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #9ab4d8;
+            border-radius: 6px;
+            padding: 0.3rem 0.95rem;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: background 0.18s, color 0.18s;
+            white-space: nowrap;
+        }
+        .copy-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+        .copy-btn.copied { background: #2e7d32; border-color: #4caf50; color: #fff; }
+
+        code {
+            background: #eef2ff;
+            color: #1e3c72;
+            padding: 0.15em 0.45em;
+            border-radius: 4px;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            font-size: 0.92em;
+        }
+
+        /* ── Prompt-Stufen ── */
+        .prompt-level {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+        .prompt-level-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: #f8faff;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .level-1 .level-badge { background: #ffe0e0; color: #c62828; }
+        .level-2 .level-badge { background: #fff8e0; color: #c27d00; }
+        .level-3 .level-badge { background: #e0f5e0; color: #276227; }
+        .prompt-level-header h4 { color: #1e3c72; font-size: 1.05rem; font-weight: 700; }
+        .prompt-level-header p  { color: #666; font-size: 0.95rem; margin: 0; }
+        .prompt-level .cmd { margin: 0; border-radius: 0; }
+        .prompt-level .cmd-label { display: none; }
+
+        /* ── Ergebnistabelle ── */
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 1rem;
+        }
+        .result-table th {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 0.9rem 1.2rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        .result-table td {
+            padding: 0.85rem 1.2rem;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        .result-table tr:nth-child(even) td { background: #f8f9fa; }
+        .result-table tr:hover td { background: #eef4ff; }
+
+        /* ── Trennlinie ── */
+        hr { border: none; border-top: 2px solid #eef0f5; margin: 3.5rem 0; }
+
+        /* ── Footer ── */
+        .page-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.6rem 3.5rem;
+            border-top: 2px solid #eef0f5;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        .page-footer a {
+            color: #2a5298;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .page-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            body { padding: 1.2rem 0.8rem; }
+            .page-body { padding: 2rem 1.5rem; }
+            .page-header { padding: 2rem 1.5rem; }
+            .page-header h1 { font-size: 1.6rem; }
+            .page-footer { flex-direction: column; gap: 0.6rem; padding: 1.4rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <div class="label">Teilnehmerarbeit · Beispiel A</div>
+        <h1>Textzusammenfassung &amp; Strukturierung</h1>
+        <p>Einen Text lokal zusammenfassen – und verstehen, wie der Prompt das Ergebnis steuert.</p>
+    </div>
+
+    <div class="page-body">
+
+        <!-- Aufgabe -->
+        <div class="box box-green">
+            <strong>🎯 Aufgabe</strong>
+            <ul>
+                <li>Einen längeren Text (z. B. Artikel, Protokoll, Lehrplantext) lokal zusammenfassen</li>
+                <li>Ergebnis einmal als Stichpunkte, einmal als Executive Summary ausgeben lassen</li>
+                <li>Verschiedene Prompt-Formulierungen ausprobieren und die Ergebnisse vergleichen</li>
+            </ul>
+        </div>
+
+        <div class="box box-blue">
+            <strong>💡 Was Sie brauchen</strong>
+            <ul>
+                <li>Ein laufendes lokales Modell (z. B. <code>phi3:mini</code> oder <code>llama3.1:8b</code>)</li>
+                <li>Einen Text, den Sie zusammenfassen möchten – eigener Inhalt oder der Beispieltext unten</li>
+                <li>Open WebUI im Browser <em>oder</em> Ollama im Terminal</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <!-- Beispieltext -->
+        <h2 class="section-title">Beispieltext zum Einfügen</h2>
+
+        <p>Falls Sie keinen eigenen Text mitgebracht haben, verwenden Sie diesen Ausschnitt
+           aus einem fiktiven Schulentwicklungsbericht:</p>
+
+        <div class="cmd cmd-example">
+            <div class="cmd-label">Beispieltext – Schulentwicklungsbericht BBS Musterstadt (Auszug)</div>
+            <div class="cmd-code">Im Schuljahr 2025/26 hat die Berufsbildende Schule Musterstadt ihr Konzept zur
+individualisierten Förderung erheblich weiterentwickelt. Ausgangspunkt war eine
+umfassende Bestandsaufnahme, die im Frühjahr 2025 gemeinsam mit der Schulleitung,
+der Lehrerkonferenz und Vertreterinnen und Vertretern der Schülerschaft durchgeführt
+wurde. Dabei zeigte sich, dass bestehende Differenzierungsmaßnahmen zwar vorhanden,
+aber nicht systematisch dokumentiert und kaum aufeinander abgestimmt waren.
+
+Kernstück des neuen Konzepts ist ein überarbeitetes Kompetenzraster, das für alle
+Ausbildungsberufe einheitlich strukturiert ist und den Lernenden eine kontinuierliche
+Selbsteinschätzung ermöglicht. Das Raster gliedert sich in die Bereiche Fachkompetenz,
+Methodenkompetenz, Sozialkompetenz und Selbstkompetenz. Für jeden Bereich sind
+konkrete Deskriptoren formuliert, die an die jeweiligen Rahmenlehrpläne der
+Kultusministerkonferenz rückgebunden sind. Lehrkräfte können das Raster sowohl als
+Beobachtungsinstrument im Unterricht als auch als Grundlage für Lernentwicklungs-
+gespräche nutzen.
+
+Begleitend wurden die Klassenkonferenzen auf einen quartalsweisen Rhythmus umgestellt,
+um frühzeitig auf Lernrückstände oder besondere Stärken einzelner Schülerinnen und
+Schüler reagieren zu können. Jede Konferenz folgt nun einer einheitlichen Struktur:
+Zunächst wird der aktuelle Lernstand anhand des Kompetenzrasters besprochen, dann
+werden konkrete Förder- oder Fordermaßnahmen vereinbart, und abschließend wird der
+Fortschritt aus der letzten Konferenz überprüft. Diese Struktur hat laut Rückmeldung
+der Lehrkräfte die Effizienz der Besprechungen deutlich erhöht.
+
+Ein zentrales Ergebnis der internen Evaluation war, dass Schülerinnen und Schüler,
+die regelmäßig Feedback über das digitale Portfolio erhielten, signifikant häufiger
+ihre Lernziele erreichten als die Vergleichsgruppe ohne Portfolio-Nutzung. Die
+Unterschiede waren vor allem in den Bereichen Methodenkompetenz und Selbstorganisation
+deutlich messbar. Auffällig war außerdem, dass Auszubildende, die aktiv an der
+Formulierung eigener Lernziele beteiligt wurden, eine höhere intrinsische Motivation
+zeigten und seltener Fehlzeiten aufwiesen.
+
+Gleichzeitig berichteten Lehrkräfte von einem erhöhten Dokumentationsaufwand, der
+insbesondere in den ersten Wochen der Umstellung als belastend empfunden wurde.
+Dieser Aufwand konnte durch gezielte Fortbildungen zur effizienten Nutzung der
+schulischen Lernplattform im Laufe des zweiten Halbjahres deutlich reduziert werden.
+Darüber hinaus wurden schulinterne Vorlagen und Textbausteine entwickelt, die eine
+schnellere Portfoliopflege ermöglichen.
+
+Im Bereich der digitalen Infrastruktur wurden im Berichtszeitraum mehrere bedeutsame
+Maßnahmen umgesetzt. Die WLAN-Abdeckung in allen Unterrichtsräumen wurde auf den
+neuesten technischen Standard gebracht, sodass nun ein zuverlässiger Internetzugang
+für alle Lernenden gewährleistet ist. Zudem wurden Tablets als Leihgeräte für
+Schülerinnen und Schüler ohne eigenes Endgerät beschafft. Ein Nutzungskonzept,
+das klare Regeln für den Einsatz privater und schulischer Geräte im Unterricht
+festlegt, wurde von einer paritätisch besetzten Arbeitsgruppe erarbeitet und von
+der Gesamtkonferenz verabschiedet.
+
+Für das kommende Schuljahr ist geplant, das Kompetenzraster auch auf kooperative
+Kompetenzen auszuweiten und ein Peer-Feedback-System einzuführen, bei dem
+Auszubildende strukturierte Rückmeldungen von Mitschülerinnen und Mitschülern
+erhalten. Hierfür werden externe Partner aus der regionalen Wirtschaft eingebunden,
+um die Praxisrelevanz der Bewertungskriterien sicherzustellen. Erste Gespräche
+mit drei Industrieunternehmen und zwei Handwerksbetrieben aus dem Einzugsgebiet
+haben bereits stattgefunden und verliefen positiv. Parallel dazu soll die Kooperation
+mit der regionalen Berufsberatung der Bundesagentur für Arbeit intensiviert werden,
+um Lernende bei der Anschlussperspektive nach dem Berufsabschluss frühzeitig zu
+begleiten.</div>
+            <div class="cmd-footer">
+                <button class="copy-btn" onclick="copyCmd(this, document.getElementById('beispieltext').textContent)">📋 Kopieren</button>
+            </div>
+        </div>
+        <!-- Verstecktes Element für Copy-Zugriff -->
+        <textarea id="beispieltext" style="display:none">Im Schuljahr 2025/26 hat die Berufsbildende Schule Musterstadt ihr Konzept zur individualisierten Förderung erheblich weiterentwickelt. Ausgangspunkt war eine umfassende Bestandsaufnahme, die im Frühjahr 2025 gemeinsam mit der Schulleitung, der Lehrerkonferenz und Vertreterinnen und Vertretern der Schülerschaft durchgeführt wurde. Dabei zeigte sich, dass bestehende Differenzierungsmaßnahmen zwar vorhanden, aber nicht systematisch dokumentiert und kaum aufeinander abgestimmt waren.
+
+Kernstück des neuen Konzepts ist ein überarbeitetes Kompetenzraster, das für alle Ausbildungsberufe einheitlich strukturiert ist und den Lernenden eine kontinuierliche Selbsteinschätzung ermöglicht. Das Raster gliedert sich in die Bereiche Fachkompetenz, Methodenkompetenz, Sozialkompetenz und Selbstkompetenz. Für jeden Bereich sind konkrete Deskriptoren formuliert, die an die jeweiligen Rahmenlehrpläne der Kultusministerkonferenz rückgebunden sind. Lehrkräfte können das Raster sowohl als Beobachtungsinstrument im Unterricht als auch als Grundlage für Lernentwicklungsgespräche nutzen.
+
+Begleitend wurden die Klassenkonferenzen auf einen quartalsweisen Rhythmus umgestellt, um frühzeitig auf Lernrückstände oder besondere Stärken einzelner Schülerinnen und Schüler reagieren zu können. Jede Konferenz folgt nun einer einheitlichen Struktur: Zunächst wird der aktuelle Lernstand anhand des Kompetenzrasters besprochen, dann werden konkrete Förder- oder Fordermaßnahmen vereinbart, und abschließend wird der Fortschritt aus der letzten Konferenz überprüft. Diese Struktur hat laut Rückmeldung der Lehrkräfte die Effizienz der Besprechungen deutlich erhöht.
+
+Ein zentrales Ergebnis der internen Evaluation war, dass Schülerinnen und Schüler, die regelmäßig Feedback über das digitale Portfolio erhielten, signifikant häufiger ihre Lernziele erreichten als die Vergleichsgruppe ohne Portfolio-Nutzung. Die Unterschiede waren vor allem in den Bereichen Methodenkompetenz und Selbstorganisation deutlich messbar. Auffällig war außerdem, dass Auszubildende, die aktiv an der Formulierung eigener Lernziele beteiligt wurden, eine höhere intrinsische Motivation zeigten und seltener Fehlzeiten aufwiesen.
+
+Gleichzeitig berichteten Lehrkräfte von einem erhöhten Dokumentationsaufwand, der insbesondere in den ersten Wochen der Umstellung als belastend empfunden wurde. Dieser Aufwand konnte durch gezielte Fortbildungen zur effizienten Nutzung der schulischen Lernplattform im Laufe des zweiten Halbjahres deutlich reduziert werden. Darüber hinaus wurden schulinterne Vorlagen und Textbausteine entwickelt, die eine schnellere Portfoliopflege ermöglichen.
+
+Im Bereich der digitalen Infrastruktur wurden im Berichtszeitraum mehrere bedeutsame Maßnahmen umgesetzt. Die WLAN-Abdeckung in allen Unterrichtsräumen wurde auf den neuesten technischen Standard gebracht, sodass nun ein zuverlässiger Internetzugang für alle Lernenden gewährleistet ist. Zudem wurden Tablets als Leihgeräte für Schülerinnen und Schüler ohne eigenes Endgerät beschafft. Ein Nutzungskonzept, das klare Regeln für den Einsatz privater und schulischer Geräte im Unterricht festlegt, wurde von einer paritätisch besetzten Arbeitsgruppe erarbeitet und von der Gesamtkonferenz verabschiedet.
+
+Für das kommende Schuljahr ist geplant, das Kompetenzraster auch auf kooperative Kompetenzen auszuweiten und ein Peer-Feedback-System einzuführen, bei dem Auszubildende strukturierte Rückmeldungen von Mitschülerinnen und Mitschülern erhalten. Hierfür werden externe Partner aus der regionalen Wirtschaft eingebunden, um die Praxisrelevanz der Bewertungskriterien sicherzustellen. Erste Gespräche mit drei Industrieunternehmen und zwei Handwerksbetrieben aus dem Einzugsgebiet haben bereits stattgefunden und verliefen positiv. Parallel dazu soll die Kooperation mit der regionalen Berufsberatung der Bundesagentur für Arbeit intensiviert werden, um Lernende bei der Anschlussperspektive nach dem Berufsabschluss frühzeitig zu begleiten.</textarea>
+
+        <hr>
+
+        <!-- Prompt-Stufen -->
+        <h2 class="section-title">Prompts – drei Stufen</h2>
+
+        <p>Probieren Sie die drei Prompts nacheinander aus. Der Text kommt jeweils ans Ende des Prompts.
+           Beobachten Sie, wie sich die Ausgabe mit jeder Stufe verändert.</p>
+
+        <!-- Stufe 1 -->
+        <div class="prompt-level level-1">
+            <div class="prompt-level-header">
+                <div class="level-badge">1</div>
+                <div>
+                    <h4>Unstrukturierter Prompt</h4>
+                    <p>Kein Ziel, kein Format, keine Rolle – was passiert?</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code">Fasse den folgenden Text zusammen:
+
+[Text hier einfügen]</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'Fasse den folgenden Text zusammen:\n\n[Text hier einfügen]')">📋 Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stufe 2 -->
+        <div class="prompt-level level-2">
+            <div class="prompt-level-header">
+                <div class="level-badge">2</div>
+                <div>
+                    <h4>Format vorgeben</h4>
+                    <p>Ausgabeformat explizit angeben – Stichpunkte und Executive Summary.</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code">Fasse den folgenden Text in zwei Teilen zusammen:
+
+1. Stichpunkte: Die 5 wichtigsten Punkte als kurze Aufzählung.
+2. Executive Summary: Ein zusammenhängender Absatz (max. 4 Sätze) für eine Schulleitung.
+
+Text:
+[Text hier einfügen]</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'Fasse den folgenden Text in zwei Teilen zusammen:\n\n1. Stichpunkte: Die 5 wichtigsten Punkte als kurze Aufzählung.\n2. Executive Summary: Ein zusammenhängender Absatz (max. 4 Sätze) für eine Schulleitung.\n\nText:\n[Text hier einfügen]')">📋 Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stufe 3 -->
+        <div class="prompt-level level-3">
+            <div class="prompt-level-header">
+                <div class="level-badge">3</div>
+                <div>
+                    <h4>Rolle + Zielgruppe + Format</h4>
+                    <p>Vollständiger Prompt – Rolle, Zielgruppe, Einschränkung und Format kombiniert.</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code">Du bist eine erfahrene Schulleiterin an einer Berufsbildenden Schule.
+Bereite den folgenden Text für eine Lehrerkonferenz auf.
+
+Ausgabe in zwei Teilen:
+1. „Auf einen Blick" – max. 5 Stichpunkte, je max. 10 Wörter.
+2. „Für die Einladung" – ein Absatz (3–4 Sätze), sachlich und einladend formuliert.
+
+Vermeide Fachjargon. Schreibe in klarem, direktem Deutsch.
+
+Text:
+[Text hier einfügen]</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'Du bist eine erfahrene Schulleiterin an einer Berufsbildenden Schule.\nBereite den folgenden Text für eine Lehrerkonferenz auf.\n\nAusgabe in zwei Teilen:\n1. „Auf einen Blick" – max. 5 Stichpunkte, je max. 10 Wörter.\n2. „Für die Einladung" – ein Absatz (3–4 Sätze), sachlich und einladend formuliert.\n\nVermeide Fachjargon. Schreibe in klarem, direktem Deutsch.\n\nText:\n[Text hier einfügen]')">📋 Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Vergleich -->
+        <h2 class="section-title">Ergebnisse vergleichen</h2>
+
+        <p>Notieren Sie nach jedem Prompt Ihre Beobachtungen:</p>
+
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>Kriterium</th>
+                    <th>Stufe 1</th>
+                    <th>Stufe 2</th>
+                    <th>Stufe 3</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Länge der Antwort</strong></td>
+                    <td></td><td></td><td></td>
+                </tr>
+                <tr>
+                    <td><strong>Format eingehalten?</strong></td>
+                    <td></td><td></td><td></td>
+                </tr>
+                <tr>
+                    <td><strong>Ton / Sprache passend?</strong></td>
+                    <td></td><td></td><td></td>
+                </tr>
+                <tr>
+                    <td><strong>Sofort verwendbar?</strong></td>
+                    <td></td><td></td><td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <!-- Zusatzaufgaben -->
+        <h2 class="section-title">Zusatzaufgaben</h2>
+
+        <div class="box box-yellow">
+            <strong>➕ Wenn Sie schneller fertig sind</strong>
+            <ul>
+                <li>Denselben Prompt mit <code>phi3:mini</code> <em>und</em> <code>llama3.1:8b</code> ausführen – wo sind die Unterschiede?</li>
+                <li>Prompt auf Englisch stellen und Ausgabe auf Deutsch anfordern:
+                    <em>„Respond in German."</em> ans Ende des Prompts anfügen</li>
+                <li>Länge der Executive Summary einschränken: <em>„max. 2 Sätze"</em> – hält sich das Modell daran?</li>
+                <li>Eigenen Text aus dem Schulalltag einsetzen (ohne personenbezogene Daten)</li>
+            </ul>
+        </div>
+
+        <!-- Reflexion -->
+        <div class="box box-green">
+            <strong>🗣️ Reflexionsfragen für die Gruppe</strong>
+            <ul>
+                <li>Welche Prompt-Elemente hatten den größten Einfluss auf das Ergebnis?</li>
+                <li>Für welche Texte aus Ihrem Schulalltag könnten Sie dieses Vorgehen nutzen?</li>
+                <li>Wo stößt die Zusammenfassung an Grenzen – was fehlt, was wird falsch gewichtet?</li>
+            </ul>
+        </div>
+
+        <!-- Erwartetes Ergebnis -->
+        <div class="box box-blue">
+            <strong>✅ Erwartetes Ergebnis</strong>
+            <ul>
+                <li>Klar strukturierte, kurze Zusammenfassungen in unterschiedlichen Formaten</li>
+                <li>Konkretes Verständnis dafür, wie Prompt-Formulierungen das Ergebnis steuern</li>
+                <li>Erfahrung mit dem Unterschied zwischen kleinen und mittleren Modellen</li>
+            </ul>
+        </div>
+
+    </div><!-- /page-body -->
+
+    <div class="page-footer">
+        <span>Workshop „Lokale LLMs in der Praxis" · Beispiel A</span>
+        <a href="installation.html">← Installationsanleitung</a>
+    </div>
+
+</div><!-- /page -->
+
+<script>
+    function copyCmd(btn, text) {
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = '✅ Kopiert!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '📋 Kopieren';
+                btn.classList.remove('copied');
+            }, 2200);
+        }).catch(() => {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.cssText = 'position:fixed;opacity:0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            btn.textContent = '✅ Kopiert!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '📋 Kopieren';
+                btn.classList.remove('copied');
+            }, 2200);
+        });
+    }
+</script>
+
+</body>
+</html>

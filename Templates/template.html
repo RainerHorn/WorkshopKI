@@ -1,0 +1,447 @@
+chatbot<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>VT LF1 - Template</title>
+    <script>
+        // Moodle-kompatibles CSS
+        (function() {
+            const styles = `
+                .container, .container * { margin: 0 !important; padding: 0 !important; box-sizing: border-box !important; }
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; line-height: 1.6 !important; color: #333 !important; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; min-height: 100vh !important; padding: 2rem !important; }
+                .container { max-width: 1200px !important; margin: 0 auto !important; background: white !important; border-radius: 20px !important; box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important; overflow: hidden !important; }
+                .header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important; color: white !important; padding: 2rem !important; text-align: center !important; }
+                .header h1 { font-size: 2.5rem !important; margin-bottom: 0.5rem !important; font-weight: 700 !important; }
+                .header p { font-size: 1.2rem !important; opacity: 0.9 !important; }
+                .content { padding: 2rem !important; }
+                .section { margin-bottom: 2.5rem !important; }
+                .container h2 { color: #1e3c72 !important; border-bottom: 3px solid #667eea !important; padding-bottom: 0.5rem !important; margin: 2rem 0 1rem 0 !important; font-size: 2rem !important; }
+                .container h3 { color: #2a5298 !important; margin: 1.8rem 0 1rem 0 !important; font-size: 1.5rem !important; }
+                .container h4 { color: #4a6cf7 !important; margin: 1.5rem 0 0.5rem 0 !important; font-size: 1.2rem !important; }
+                .container p { margin: 1rem 0 !important; line-height: 1.6 !important; }
+                .container ul, .container ol { margin: 1rem 0 !important; padding-left: 2rem !important; }
+                .container li { margin: 0.5rem 0 !important; }
+                
+                .intro { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important; border-left: 4px solid #667eea !important; padding: 1.5rem !important; margin: 1.5rem 0 !important; border-radius: 8px !important; box-shadow: 0 3px 10px rgba(102, 126, 234, 0.1) !important; }
+                .task { background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%) !important; border-left: 4px solid #4caf50 !important; padding: 1.5rem !important; margin: 1.5rem 0 !important; border-radius: 8px !important; box-shadow: 0 3px 10px rgba(76, 175, 80, 0.1) !important; }
+                .task strong { color: #2e7d32 !important; font-size: 1.1rem !important; display: block !important; margin-bottom: 0.8rem !important; }
+                .question { background: linear-gradient(135deg, #fff3cd 0%, #fdeaa7 100%) !important; border-left: 4px solid #f39c12 !important; padding: 1.5rem !important; margin: 1.5rem 0 !important; border-radius: 8px !important; box-shadow: 0 3px 10px rgba(243, 156, 18, 0.1) !important; }
+                .tech-specs { background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%) !important; border-left: 4px solid #0288d1 !important; padding: 1.5rem !important; margin: 1.5rem 0 !important; border-radius: 8px !important; box-shadow: 0 3px 10px rgba(2, 136, 209, 0.1) !important; }
+                .warning { background: linear-gradient(135deg, #ffe6e6 0%, #ffb3b3 100%) !important; border-left: 4px solid #e74c3c !important; padding: 1.5rem !important; margin: 1.5rem 0 !important; border-radius: 8px !important; box-shadow: 0 3px 10px rgba(231, 76, 60, 0.1) !important; }
+                .praxis-box { background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%) !important; border-left: 4px solid #4caf50 !important; padding: 1.5rem !important; margin: 1.5rem 0 !important; border-radius: 8px !important; box-shadow: 0 3px 10px rgba(76, 175, 80, 0.1) !important; }
+                
+                .phases { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important; gap: 1.5rem !important; margin: 2rem 0 !important; }
+                .phase { background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important; border-radius: 12px !important; padding: 1.5rem !important; box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important; border: 1px solid #e9ecef !important; position: relative !important; transition: transform 0.3s ease !important; }
+                .phase:hover { transform: translateY(-5px) !important; box-shadow: 0 15px 35px rgba(0,0,0,0.15) !important; }
+                
+                .comparison-table { width: 100% !important; border-collapse: collapse !important; margin: 1.5rem 0 !important; background: white !important; border-radius: 8px !important; overflow: hidden !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; }
+                .comparison-table th { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important; color: white !important; padding: 1rem !important; font-weight: 600 !important; text-align: left !important; }
+                .comparison-table td { padding: 1rem !important; border-bottom: 1px solid #e9ecef !important; }
+                .comparison-table tr:nth-child(even) { background-color: #f8f9fa !important; }
+                .comparison-table tr:hover { background-color: #e3f2fd !important; }
+                
+                .interactive-demo { background: linear-gradient(135deg, #fffde7 0%, #fff9c4 100%) !important; border: 2px solid #ff9800 !important; border-radius: 12px !important; padding: 1.5rem !important; margin: 2rem 0 !important; text-align: center !important; }
+                .demo-button { background: linear-gradient(135deg, #ff9800 0%, #f57f17 100%) !important; color: white !important; border: none !important; padding: 0.8rem 1.5rem !important; border-radius: 25px !important; cursor: pointer !important; font-size: 1rem !important; margin: 0.5rem !important; transition: all 0.3s ease !important; }
+                .demo-button:hover { transform: translateY(-2px) !important; box-shadow: 0 5px 15px rgba(255, 152, 0, 0.4) !important; }
+                
+                .accordion { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important; border: 2px solid #667eea !important; border-radius: 12px !important; margin: 1.5rem 0 !important; overflow: hidden !important; }
+                .accordion-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; color: white !important; padding: 1.2rem 1.5rem !important; cursor: pointer !important; display: flex !important; align-items: center !important; gap: 1rem !important; font-weight: 600 !important; font-size: 1.1rem !important; transition: background 0.3s ease !important; user-select: none !important; }
+                .accordion-header:hover { background: linear-gradient(135deg, #5568d3 0%, #653a89 100%) !important; }
+                .accordion-icon { font-size: 1.3rem !important; transition: transform 0.3s ease !important; flex-shrink: 0 !important; }
+                .accordion-icon.open { transform: rotate(90deg) !important; }
+                .accordion-content { max-height: 0 !important; overflow: hidden !important; transition: max-height 0.4s ease, padding 0.4s ease !important; padding: 0 1.5rem !important; background: white !important; }
+                .accordion-content.open { max-height: 2000px !important; padding: 1.5rem !important; }
+                
+                .nav-menu { position: fixed !important; background: white !important; border-radius: 15px !important; padding: 1rem !important; box-shadow: 0 8px 30px rgba(0,0,0,0.2) !important; z-index: 99999 !important; border: 2px solid #667eea !important; user-select: none !important; width: fit-content !important; height: fit-content !important; }
+                .nav-menu:active { cursor: grabbing !important; }
+                .nav-menu-header { cursor: move !important; padding: 0.5rem !important; text-align: center !important; color: #667eea !important; font-size: 1.2rem !important; border-bottom: 1px solid #e9ecef !important; margin-bottom: 0.8rem !important; }
+                .nav-buttons { display: flex !important; flex-direction: column !important; gap: 0.8rem !important; }
+                .nav-divider { height: 1px !important; background: linear-gradient(90deg, transparent, #667eea, transparent) !important; margin: 0.5rem 0 !important; }
+                .nav-btn { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%) !important; color: white !important; border: none !important; width: 50px !important; height: 50px !important; min-width: 50px !important; min-height: 50px !important; border-radius: 50% !important; cursor: pointer !important; font-size: 1.3rem !important; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: 0 4px 15px rgba(30, 60, 114, 0.4) !important; transition: box-shadow 0.3s ease, background 0.3s ease !important; }
+                .nav-btn:hover { box-shadow: 0 6px 20px rgba(30, 60, 114, 0.6) !important; background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%) !important; }
+                
+                @media (max-width: 768px) {
+                    body { padding: 1rem !important; }
+                    .header h1 { font-size: 2rem !important; }
+                    .content { padding: 1.5rem !important; }
+                    .phases { grid-template-columns: 1fr !important; }
+                    .nav-menu { left: 1rem !important; bottom: 1rem !important; }
+                    .nav-btn { width: 45px !important; height: 45px !important; font-size: 1.1rem !important; }
+                }
+            `;
+            const styleSheet = document.createElement('style');
+            styleSheet.textContent = styles;
+            document.head.appendChild(styleSheet);
+        })();
+
+        // Chatbot Styling
+        (function() {
+            const chatStyles = `
+                #chat-container { color: white !important; }
+                #chat-container * { color: white !important; }
+                #chat-container .bot-message { color: white !important; background-color: rgba(59,130,246,0.8) !important; }
+                #chat-container .user-message { color: white !important; background-color: rgba(107,114,128,0.8) !important; }
+                #chat-container input, #chat-container textarea { color: white !important; background-color: rgba(55,65,81,0.9) !important; }
+            `;
+            const s = document.createElement('style');
+            s.textContent = chatStyles;
+            document.head.appendChild(s);
+        })();
+
+        // Globale Funktionen für Navigation und Interaktivität
+        window.copyToClipboard = function(code) { 
+            navigator.clipboard.writeText(code).catch(()=>{}); 
+        };
+        
+        window.sendToChatbot = function(message) {
+            const chatButton = document.getElementById('chat-icon');
+            if (chatButton) chatButton.click();
+            setTimeout(() => {
+                const chatInput = document.getElementById('chat-input');
+                const sendButton = document.getElementById('send-button');
+                if (chatInput && sendButton) { 
+                    chatInput.value = message; 
+                    sendButton.click(); 
+                }
+            }, 500);
+        };
+        
+        // Akkordeon-Funktion
+        window.toggleAccordion = function(element) {
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('.accordion-icon');
+            
+            if (content && icon) {
+                content.classList.toggle('open');
+                icon.classList.toggle('open');
+            }
+        };
+        
+        // Navigation - Zum Anfang springen
+        window.scrollToTop = function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        
+        // Navigation - Zum Ende springen
+        window.scrollToBottom = function() {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        };
+        
+        // Navigation - Eine Seite nach oben
+        window.scrollPageUp = function() {
+            window.scrollBy({ top: -window.innerHeight, behavior: 'smooth' });
+        };
+        
+        // Navigation - Eine Seite nach unten
+        window.scrollPageDown = function() {
+            window.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
+        };
+        
+        // Alle Akkordeons aufklappen
+        window.expandAllAccordions = function() {
+            document.querySelectorAll('.accordion-content').forEach(content => {
+                content.classList.add('open');
+            });
+            document.querySelectorAll('.accordion-icon').forEach(icon => {
+                icon.classList.add('open');
+            });
+        };
+        
+        // Alle Akkordeons zuklappen
+        window.collapseAllAccordions = function() {
+            document.querySelectorAll('.accordion-content').forEach(content => {
+                content.classList.remove('open');
+            });
+            document.querySelectorAll('.accordion-icon').forEach(icon => {
+                icon.classList.remove('open');
+            });
+        };
+
+        // Drag & Drop für Navigationsmenü
+        window.makeDraggable = function(element) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            let isDragging = false;
+            
+            const header = element.querySelector('.nav-menu-header');
+            const dragTarget = header || element;
+            
+            dragTarget.onmousedown = dragMouseDown;
+            dragTarget.ontouchstart = dragTouchStart;
+            
+            function dragMouseDown(e) {
+                // Nur wenn nicht auf Button geklickt wurde
+                if (e.target.closest('.nav-btn')) return;
+                
+                e.preventDefault();
+                isDragging = false;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+                element.style.cursor = 'grabbing';
+            }
+            
+            function dragTouchStart(e) {
+                if (e.target.closest('.nav-btn')) return;
+                
+                isDragging = false;
+                pos3 = e.touches[0].clientX;
+                pos4 = e.touches[0].clientY;
+                document.ontouchend = closeDragElement;
+                document.ontouchmove = elementDragTouch;
+            }
+            
+            function elementDrag(e) {
+                e.preventDefault();
+                isDragging = true;
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                
+                let newTop = element.offsetTop - pos2;
+                let newLeft = element.offsetLeft - pos1;
+                
+                // Grenzen setzen (nicht aus dem Viewport)
+                newTop = Math.max(0, Math.min(newTop, window.innerHeight - element.offsetHeight));
+                newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - element.offsetWidth));
+                
+                element.style.top = newTop + "px";
+                element.style.left = newLeft + "px";
+                element.style.bottom = "auto";
+                element.style.right = "auto";
+            }
+            
+            function elementDragTouch(e) {
+                isDragging = true;
+                pos1 = pos3 - e.touches[0].clientX;
+                pos2 = pos4 - e.touches[0].clientY;
+                pos3 = e.touches[0].clientX;
+                pos4 = e.touches[0].clientY;
+                
+                let newTop = element.offsetTop - pos2;
+                let newLeft = element.offsetLeft - pos1;
+                
+                newTop = Math.max(0, Math.min(newTop, window.innerHeight - element.offsetHeight));
+                newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - element.offsetWidth));
+                
+                element.style.top = newTop + "px";
+                element.style.left = newLeft + "px";
+                element.style.bottom = "auto";
+                element.style.right = "auto";
+            }
+            
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+                document.ontouchend = null;
+                document.ontouchmove = null;
+                element.style.cursor = '';
+                isDragging = false;
+            }
+        };
+
+        // Event Listener für alle Buttons registrieren
+        document.addEventListener('DOMContentLoaded', function() {
+            // Alle Buttons sammeln
+            const allButtons = document.querySelectorAll('.nav-btn');
+            
+            // Scroll-Buttons (Index 0-3)
+            if (allButtons[0]) allButtons[0].addEventListener('click', () => window.scrollToTop());
+            if (allButtons[1]) allButtons[1].addEventListener('click', () => window.scrollPageUp());
+            if (allButtons[2]) allButtons[2].addEventListener('click', () => window.scrollPageDown());
+            if (allButtons[3]) allButtons[3].addEventListener('click', () => window.scrollToBottom());
+            
+            // Akkordeon-Buttons (Index 4-5)
+            if (allButtons[4]) allButtons[4].addEventListener('click', () => window.expandAllAccordions());
+            if (allButtons[5]) allButtons[5].addEventListener('click', () => window.collapseAllAccordions());
+            
+            // Akkordeon-Header
+            document.querySelectorAll('.accordion-header').forEach(header => {
+                header.addEventListener('click', () => window.toggleAccordion(header));
+            });
+            
+            // Navigationsmenü verschiebbar machen und Startposition setzen
+            const navMenu = document.querySelector('.nav-menu');
+            if (navMenu) {
+                // Setze Startposition nur beim ersten Laden (wenn keine Position gesetzt ist)
+                if (!navMenu.style.top && !navMenu.style.right) {
+                    navMenu.style.right = '2rem';
+                    navMenu.style.top = '2rem';
+                }
+                window.makeDraggable(navMenu);
+            }
+        });
+
+        // MMBBSBOT Integration
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                const { MMBBSBOT } = await import('https://dev.mm-bbs.de:8085/mmbbs-bot.js');
+                const element = document.querySelector('.activity-description');
+                const htmlContent = element ? element.innerHTML : '';
+                const settings = {
+                    host: 'dev.mm-bbs.de',
+                    protocol: 'https',
+                    port: 8085,
+                    opener: 'Hallo, wie kann ich dir helfen?',
+                    chat_icon: '',
+                    chat_icon_style: 'border-radius: 50%; width: 60px; height: 60px; object-fit: cover; display: block;',
+                    title: 'VT GPT',
+                    task: htmlContent,
+                    hints: 'Sie sind Experte für Fachinformatiker Anwendungsentwicklung mit Schwerpunkt auf Datenbanken. Sie erstellen keine fertigen Lösungen, sondern geben Erklärungen zu den Fragen. Ihre Schüler sind Fachinformatiker im 2.AJ.',
+                    cookie: document.cookie
+                };
+                const bot = new MMBBSBOT(settings);
+            } catch (e) { console.error('Chatbot Fehler', e); }
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Titel der Lerneinheit</h1>
+            <p>Datenbanken X - Lernfeld 8: Daten systemübergreifend bereitstellen</p>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <div class="intro">
+                    <strong style="display: block; font-size: 1.2rem; margin-bottom: 1rem; color: #1e3c72;">🎯 Einführung</strong>
+                    <p>Einführungstext hier einfügen...</p>
+                </div>
+
+                <h2>Überschrift Abschnitt 1</h2>
+                <p>Beschreibender Text...</p>
+
+                <div class="task">
+                    <strong>📝 Arbeitsauftrag 1: Titel</strong>
+                    <p>Sozialform: Einzelarbeit | Zeit: 15 Minuten</p>
+                    <p><strong>Aufgabenstellung:</strong></p>
+                    <ol>
+                        <li>Aufgabe 1</li>
+                        <li>Aufgabe 2</li>
+                    </ol>
+                </div>
+
+                <div class="praxis-box">
+                    <h4>💡 Praxistipp</h4>
+                    <p>Praktische Hinweise...</p>
+                </div>
+
+                <div class="tech-specs">
+                    <h4>📊 Technische Details</h4>
+                    <ul>
+                        <li>Detail 1</li>
+                        <li>Detail 2</li>
+                    </ul>
+                </div>
+
+                <div class="warning">
+                    <strong>⚠️ Wichtiger Hinweis</strong>
+                    <p>Warnungstext...</p>
+                </div>
+
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Spalte 1</th>
+                            <th>Spalte 2</th>
+                            <th>Spalte 3</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Wert 1</td>
+                            <td>Wert 2</td>
+                            <td>Wert 3</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="phases">
+                    <div class="phase">
+                        <h4>Phase 1</h4>
+                        <p>Beschreibung...</p>
+                    </div>
+                    <div class="phase">
+                        <h4>Phase 2</h4>
+                        <p>Beschreibung...</p>
+                    </div>
+                </div>
+
+                <div class="interactive-demo">
+                    <h3>💻 Interaktive Demo</h3>
+                    <p>Demo-Text...</p>
+                    <button class="demo-button" onclick="alert('Demo-Funktion')">Demo-Button</button>
+                </div>
+
+                <div class="question">
+                    <strong>❓ Kontrollfragen</strong>
+                    <ol>
+                        <li>Frage 1?</li>
+                        <li>Frage 2?</li>
+                    </ol>
+                </div>
+
+                <!-- Akkordeon-Beispiel -->
+                <div class="accordion">
+                    <div class="accordion-header">
+                        <span class="accordion-icon">▶</span>
+                        <span>Zusatzinformationen (klicken zum Aufklappen)</span>
+                    </div>
+                    <div class="accordion-content">
+                        <h4>Erweiterte Details</h4>
+                        <p>Hier können Sie zusätzliche Informationen einfügen, die nicht sofort sichtbar sein sollen.</p>
+                        <ul>
+                            <li>Detail 1</li>
+                            <li>Detail 2</li>
+                            <li>Detail 3</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion">
+                    <div class="accordion-header">
+                        <span class="accordion-icon">▶</span>
+                        <span>Lösungen zu Aufgaben (klicken zum Aufklappen)</span>
+                    </div>
+                    <div class="accordion-content">
+                        <h4>Musterlösung</h4>
+                        <p>Die Lösungen sollten erst nach der Bearbeitung angezeigt werden.</p>
+                        <ol>
+                            <li>Lösung zu Aufgabe 1</li>
+                            <li>Lösung zu Aufgabe 2</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schwebendes Navigationsmenü -->
+    <div class="nav-menu">
+        <div class="nav-menu-header">☰</div>
+        <div class="nav-buttons">
+            <button class="nav-btn" title="Zum Seitenanfang" aria-label="Zum Seitenanfang">
+                ⬆️
+            </button>
+            <button class="nav-btn" title="Eine Seite nach oben" aria-label="Eine Seite nach oben">
+                🔼
+            </button>
+            <button class="nav-btn" title="Eine Seite nach unten" aria-label="Eine Seite nach unten">
+                🔽
+            </button>
+            <button class="nav-btn" title="Zum Seitenende" aria-label="Zum Seitenende">
+                ⬇️
+            </button>
+            <div class="nav-divider"></div>
+            <button class="nav-btn" title="Alle Akkordeons aufklappen" aria-label="Alle Akkordeons aufklappen">
+                📂
+            </button>
+            <button class="nav-btn" title="Alle Akkordeons zuklappen" aria-label="Alle Akkordeons zuklappen">
+                📁
+            </button>
+        </div>
+    </div>
+</body>
+</html>

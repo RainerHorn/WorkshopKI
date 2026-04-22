@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beispiel C: Dokumentenerstellung mit personengebundenen Daten</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.1rem;
+            line-height: 1.85;
+            color: #222;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 3rem 10%;
+        }
+
+        .page {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+            overflow: hidden;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 2.5rem 3rem;
+        }
+        .page-header .label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+        }
+        .page-header h1 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .page-header p {
+            font-size: 1.05rem;
+            opacity: 0.85;
+        }
+
+        /* ── Inhalt ── */
+        .page-body {
+            padding: 3rem 3.5rem;
+        }
+
+        /* ── Abschnittsüberschrift ── */
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e3c72;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+            margin: 3rem 0 1.8rem 0;
+        }
+        .section-title:first-of-type { margin-top: 0; }
+
+        p { margin: 0.8rem 0; }
+        ul, ol { padding-left: 1.6rem; margin: 0.8rem 0; }
+        li { margin: 0.45rem 0; }
+
+        /* ── Boxen ── */
+        .box {
+            border-radius: 10px;
+            padding: 1.4rem 1.8rem;
+            margin: 1.8rem 0;
+            line-height: 1.85;
+        }
+        .box-blue   { background: #eef4ff; border-left: 4px solid #2a5298; }
+        .box-green  { background: #eaf7ea; border-left: 4px solid #43a047; }
+        .box-yellow { background: #fffbea; border-left: 4px solid #f59e0b; }
+        .box-red    { background: #fff1f0; border-left: 4px solid #e53e3e; }
+        .box strong { display: block; margin-bottom: 0.5rem; }
+        .box ul { padding-left: 1.4rem; margin: 0.5rem 0 0 0; }
+        .box li { margin: 0.4rem 0; }
+
+        /* ── Code-Block ── */
+        .cmd {
+            background: #18243a;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1.4rem 0;
+        }
+        .cmd-label {
+            padding: 0.55rem 1.5rem;
+            background: rgba(255,255,255,0.07);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.8rem;
+            color: #7a99cc;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+        .cmd-code {
+            padding: 1.3rem 1.5rem;
+            font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+            font-size: 0.97rem;
+            color: #9fdfb0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.7;
+        }
+        .cmd-example .cmd-code {
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        .cmd-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0.55rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #9ab4d8;
+            border-radius: 6px;
+            padding: 0.3rem 0.95rem;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: background 0.18s, color 0.18s;
+            white-space: nowrap;
+        }
+        .copy-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+        .copy-btn.copied { background: #2e7d32; border-color: #4caf50; color: #fff; }
+
+        code {
+            background: #eef2ff;
+            color: #1e3c72;
+            padding: 0.15em 0.45em;
+            border-radius: 4px;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            font-size: 0.92em;
+        }
+
+        /* ── Schritte mit Nummer ── */
+        .step {
+            display: flex;
+            gap: 1.2rem;
+            align-items: flex-start;
+            margin: 2rem 0;
+        }
+        .step-num {
+            flex-shrink: 0;
+            width: 2.4rem;
+            height: 2.4rem;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0.15rem;
+            box-shadow: 0 3px 10px rgba(30,60,114,0.3);
+        }
+        .step-body { flex: 1; }
+        .step-body h4 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #1e3c72;
+            margin-bottom: 0.4rem;
+        }
+        .step-body p { margin: 0.4rem 0; }
+        .step-body .cmd { margin-top: 0.8rem; }
+
+        /* ── Pfeil zwischen Schritten ── */
+        .arrow {
+            text-align: center;
+            font-size: 1.6rem;
+            color: #b0bec5;
+            margin: 0.5rem 0;
+            line-height: 1;
+        }
+
+        /* ── Prompt-Level ── */
+        .prompt-level {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+        .prompt-level-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: #f8faff;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .level-1 .level-badge { background: #ffe0e0; color: #c62828; }
+        .level-2 .level-badge { background: #fff8e0; color: #c27d00; }
+        .level-3 .level-badge { background: #e0f5e0; color: #276227; }
+        .prompt-level-header h4 { color: #1e3c72; font-size: 1.05rem; font-weight: 700; }
+        .prompt-level-header p  { color: #666; font-size: 0.95rem; margin: 0; }
+        .prompt-level .cmd { margin: 0; border-radius: 0; }
+        .prompt-level .cmd-label { display: none; }
+
+        /* ── Tabelle ── */
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 1rem;
+        }
+        .result-table th {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 0.9rem 1.2rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        .result-table td {
+            padding: 0.85rem 1.2rem;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        .result-table tr:nth-child(even) td { background: #f8f9fa; }
+        .result-table tr:hover td { background: #eef4ff; }
+
+        /* ── Trennlinie ── */
+        hr { border: none; border-top: 2px solid #eef0f5; margin: 3.5rem 0; }
+
+        /* ── Footer ── */
+        .page-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.6rem 3.5rem;
+            border-top: 2px solid #eef0f5;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        .page-footer a {
+            color: #2a5298;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .page-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            body { padding: 1.2rem 0.8rem; }
+            .page-body { padding: 2rem 1.5rem; }
+            .page-header { padding: 2rem 1.5rem; }
+            .page-header h1 { font-size: 1.6rem; }
+            .page-footer { flex-direction: column; gap: 0.6rem; padding: 1.4rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <div class="label">Teilnehmerarbeit · Beispiel C</div>
+        <h1>Dokumentenerstellung mit personengebundenen Daten</h1>
+        <p>Vorlagen für BBS-Dokumente erstellen – und lernen, wie man Daten sicher ins Modell bringt.</p>
+    </div>
+
+    <div class="page-body">
+
+        <!-- Aufgabe -->
+        <div class="box box-green">
+            <strong>🎯 Aufgabe</strong>
+            <ul>
+                <li>Vorlagen für typische BBS-Dokumente erstellen lassen (Zeugnistexte, Elternbriefe, Praktikumsbeurteilungen)</li>
+                <li>Eine Prompt-Kette erarbeiten, die Namen und Daten vor der Modell-Eingabe automatisch durch Platzhalter ersetzt</li>
+                <li>Optional: Bestehende Vorlagen sprachlich verbessern oder an einen anderen Schulzweig anpassen</li>
+            </ul>
+        </div>
+
+        <div class="box box-red">
+            <strong>🔒 Datenschutz-Hinweis</strong>
+            <ul>
+                <li>In dieser Aufgabe arbeiten wir mit einem <strong>zweistufigen Verfahren</strong>: Erst anonymisieren, dann ins Modell</li>
+                <li>Der Anonymisierungsschritt ist keine optionale Ergänzung – er ist die Voraussetzung für datenschutzkonformen LLM-Einsatz</li>
+                <li>Verwenden Sie ausschließlich die Beispieldaten unten oder vollständig fiktive Angaben</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <!-- Zweistufiges Verfahren -->
+        <h2 class="section-title">Das zweistufige Verfahren</h2>
+
+        <p>Bevor ein Dokument ins Modell geht, müssen alle personenbezogenen Daten entfernt werden.
+           Das Modell arbeitet dann nur mit Platzhaltern – und Sie füllen diese im letzten Schritt wieder ein.</p>
+
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+                <h4>Rohdokument mit echten Daten</h4>
+                <p>Das originale Dokument mit Namen, Datum und weiteren personenbezogenen Angaben –
+                   verbleibt <strong>immer lokal</strong>, geht nie ins Modell.</p>
+            </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+                <h4>Anonymisierungsschritt: Namen durch Platzhalter ersetzen</h4>
+                <p>Manuell oder per Prompt: Ersetzen Sie alle personenbezogenen Angaben durch generische Platzhalter.
+                   Diesen anonymisierten Text geben Sie ins Modell.</p>
+                <div class="cmd">
+                    <div class="cmd-label">Anonymisierungs-Prompt</div>
+                    <div class="cmd-code">Ersetze in folgendem Text alle personenbezogenen Daten durch neutrale Platzhalter.
+Verwende dabei folgende Konvention:
+  Namen → [NAME]
+  Schule/Institution → [SCHULE]
+  Datum/Zeitraum → [ZEITRAUM]
+  Ausbildungsberuf → [BERUF]
+  Betrieb/Unternehmen → [BETRIEB]
+
+Gib ausschließlich den anonymisierten Text zurück, keine Erklärungen.
+
+Text:
+[Rohdokument hier einfügen]</div>
+                    <div class="cmd-footer">
+                        <button class="copy-btn" onclick="copyCmd(this, 'Ersetze in folgendem Text alle personenbezogenen Daten durch neutrale Platzhalter.\nVerwende dabei folgende Konvention:\n  Namen → [NAME]\n  Schule/Institution → [SCHULE]\n  Datum/Zeitraum → [ZEITRAUM]\n  Ausbildungsberuf → [BERUF]\n  Betrieb/Unternehmen → [BETRIEB]\n\nGib ausschließlich den anonymisierten Text zurück, keine Erklärungen.\n\nText:\n[Rohdokument hier einfügen]')">📋 Kopieren</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+                <h4>Dokument generieren oder verbessern</h4>
+                <p>Das Modell arbeitet mit dem anonymisierten Text. Ausgabe enthält nur Platzhalter.</p>
+            </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">
+                <h4>Platzhalter wieder befüllen</h4>
+                <p>Sie ersetzen <code>[NAME]</code>, <code>[BETRIEB]</code> etc. manuell im finalen Dokument –
+                   ohne dass diese Daten je das lokale System verlassen haben.</p>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Beispieldaten -->
+        <h2 class="section-title">Beispieldaten zum Einfügen</h2>
+
+        <p>Wählen Sie eines der beiden Rohdokumente unten. Führen Sie dann die vier Schritte durch.</p>
+
+        <!-- Rohdokument A -->
+        <div class="cmd cmd-example">
+            <div class="cmd-label">Rohdokument A – Praktikumsbeurteilung (mit fiktiven Personendaten)</div>
+            <div class="cmd-code">Praktikumsbeurteilung
+
+Schülerin: Jana Bergmann
+Klasse: HEP 11a | Berufsfeld: Gesundheit und Pflege
+Praktikumsbetrieb: Seniorenzentrum Sonnenhügel, Musterstadt
+Zeitraum: 03.03.2026 – 28.03.2026
+Betreuende Fachkraft: Pflegefachmann Rainer Koch
+
+Tätigkeiten:
+Jana hat während des Praktikums bei der Grundpflege von Bewohnerinnen und Bewohnern
+assistiert, Mahlzeiten ausgeteilt und Dokumentationsaufgaben im Pflegeplan übernommen.
+Sie zeigte sich von Beginn an motiviert und sprach Pflegebedürftige stets respektvoll an.
+
+Stärken:
+- Einfühlsames, ruhiges Auftreten gegenüber pflegebedürftigen Personen
+- Pünktlichkeit und Zuverlässigkeit an allen Einsatztagen
+- Rasche Einarbeitung in die digitale Dokumentationssoftware
+
+Entwicklungsfelder:
+- Eigeninitiative bei der Übernahme von Aufgaben außerhalb des direkten Auftrags
+- Sicherheit bei der Anwendung hygienischer Grundregeln (Handdesinfektion)
+
+Gesamteinschätzung:
+Jana Bergmann hat das Praktikum mit sehr gutem Engagement absolviert.
+Wir empfehlen sie für einen Ausbildungsplatz in unserem Haus.
+
+Unterschrift Betrieb: R. Koch | Musterstadt, 28.03.2026</div>
+            <div class="cmd-footer">
+                <button class="copy-btn" onclick="copyCmd(this, document.getElementById('roh-a').textContent)">📋 Kopieren</button>
+            </div>
+        </div>
+        <textarea id="roh-a" style="display:none">Praktikumsbeurteilung
+
+Schülerin: Jana Bergmann
+Klasse: HEP 11a | Berufsfeld: Gesundheit und Pflege
+Praktikumsbetrieb: Seniorenzentrum Sonnenhügel, Musterstadt
+Zeitraum: 03.03.2026 – 28.03.2026
+Betreuende Fachkraft: Pflegefachmann Rainer Koch
+
+Tätigkeiten:
+Jana hat während des Praktikums bei der Grundpflege von Bewohnerinnen und Bewohnern assistiert, Mahlzeiten ausgeteilt und Dokumentationsaufgaben im Pflegeplan übernommen. Sie zeigte sich von Beginn an motiviert und sprach Pflegebedürftige stets respektvoll an.
+
+Stärken:
+- Einfühlsames, ruhiges Auftreten gegenüber pflegebedürftigen Personen
+- Pünktlichkeit und Zuverlässigkeit an allen Einsatztagen
+- Rasche Einarbeitung in die digitale Dokumentationssoftware
+
+Entwicklungsfelder:
+- Eigeninitiative bei der Übernahme von Aufgaben außerhalb des direkten Auftrags
+- Sicherheit bei der Anwendung hygienischer Grundregeln (Handdesinfektion)
+
+Gesamteinschätzung:
+Jana Bergmann hat das Praktikum mit sehr gutem Engagement absolviert. Wir empfehlen sie für einen Ausbildungsplatz in unserem Haus.
+
+Unterschrift Betrieb: R. Koch | Musterstadt, 28.03.2026</textarea>
+
+        <!-- Rohdokument B -->
+        <div class="cmd cmd-example">
+            <div class="cmd-label">Rohdokument B – Gesprächsprotokoll Elterngespräch (mit fiktiven Personendaten)</div>
+            <div class="cmd-code">Gesprächsprotokoll – Lernentwicklungsgespräch
+
+Datum: 14.04.2026 | Uhrzeit: 15:30 Uhr
+Schüler: Tobias Frenzel, KFZ 12c
+Teilnehmende: Klassenlehrer Herr Martens, Mutter Frau Frenzel, Tobias Frenzel
+
+Anlass:
+Rückläufige Leistungen in den Lernfeldern 7 und 8 sowie wiederholte
+Unterrichtsunterbrechungen durch Mobiltelefon-Nutzung.
+
+Besprochene Punkte:
+1. Herr Martens schildert den aktuellen Leistungsstand (Note 4 in LF 7, Note 5 in LF 8).
+   Tobias zeigt in der Praxis deutlich bessere Leistungen als in schriftlichen Prüfungen.
+2. Frau Frenzel berichtet von familiären Belastungen im ersten Halbjahr, die sich
+   auf Tobias' Konzentration ausgewirkt haben. Die Situation habe sich stabilisiert.
+3. Tobias erklärt, dass er Schwierigkeiten hat, Lerninhalte aus dem Unterricht zuhause
+   nachzuarbeiten, da ihm strukturierte Zusammenfassungen fehlen.
+
+Vereinbarte Maßnahmen:
+- Tobias erhält bis Ende April Lernmaterialien für LF 7 als Zusammenfassung (Herr Martens)
+- Mobiltelefon wird während des Unterrichts in der Schultasche belassen (alle)
+- Nachschreibtermin für Klassenarbeit LF 8: 05.05.2026 (Herr Martens organisiert)
+- Rückmeldung über Lernfortschritt in vier Wochen per E-Mail (Frau Frenzel an Herrn Martens)
+
+Nächstes Gespräch: bei Bedarf, spätestens Ende Mai 2026</div>
+            <div class="cmd-footer">
+                <button class="copy-btn" onclick="copyCmd(this, document.getElementById('roh-b').textContent)">📋 Kopieren</button>
+            </div>
+        </div>
+        <textarea id="roh-b" style="display:none">Gesprächsprotokoll – Lernentwicklungsgespräch
+
+Datum: 14.04.2026 | Uhrzeit: 15:30 Uhr
+Schüler: Tobias Frenzel, KFZ 12c
+Teilnehmende: Klassenlehrer Herr Martens, Mutter Frau Frenzel, Tobias Frenzel
+
+Anlass:
+Rückläufige Leistungen in den Lernfeldern 7 und 8 sowie wiederholte Unterrichtsunterbrechungen durch Mobiltelefon-Nutzung.
+
+Besprochene Punkte:
+1. Herr Martens schildert den aktuellen Leistungsstand (Note 4 in LF 7, Note 5 in LF 8). Tobias zeigt in der Praxis deutlich bessere Leistungen als in schriftlichen Prüfungen.
+2. Frau Frenzel berichtet von familiären Belastungen im ersten Halbjahr, die sich auf Tobias' Konzentration ausgewirkt haben. Die Situation habe sich stabilisiert.
+3. Tobias erklärt, dass er Schwierigkeiten hat, Lerninhalte aus dem Unterricht zuhause nachzuarbeiten, da ihm strukturierte Zusammenfassungen fehlen.
+
+Vereinbarte Maßnahmen:
+- Tobias erhält bis Ende April Lernmaterialien für LF 7 als Zusammenfassung (Herr Martens)
+- Mobiltelefon wird während des Unterrichts in der Schultasche belassen (alle)
+- Nachschreibtermin für Klassenarbeit LF 8: 05.05.2026 (Herr Martens organisiert)
+- Rückmeldung über Lernfortschritt in vier Wochen per E-Mail (Frau Frenzel an Herrn Martens)
+
+Nächstes Gespräch: bei Bedarf, spätestens Ende Mai 2026</textarea>
+
+        <hr>
+
+        <!-- Prompts für Dokumentengenerierung -->
+        <h2 class="section-title">Prompts – Dokumente generieren</h2>
+
+        <p>Verwenden Sie jeweils den <strong>anonymisierten Text</strong> aus Schritt 2 als Eingabe.
+           Die Ausgabe enthält dann nur noch Platzhalter, die Sie anschließend manuell befüllen.</p>
+
+        <!-- Prompt 1 -->
+        <div class="prompt-level level-1">
+            <div class="prompt-level-header">
+                <div class="level-badge">A</div>
+                <div>
+                    <h4>Beurteilungstext ausformulieren</h4>
+                    <p>Aus Stichpunkten einen fließenden, professionellen Beurteilungstext machen.</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code">Du bist Lehrkraft an einer Berufsbildenden Schule.
+Formuliere auf Basis der folgenden anonymisierten Praktikumsbeurteilung
+einen zusammenhängenden Beurteilungstext im Zeugnisduktus.
+
+Anforderungen:
+- Sachlich, wertschätzend, ohne Füllwörter
+- Stärken und Entwicklungsfelder fließend einweben (nicht als Liste)
+- Abschließende Empfehlung in einem Satz
+- Länge: ca. 120–150 Wörter
+- Platzhalter [NAME], [BETRIEB] etc. beibehalten
+
+Beurteilungsnotizen:
+[Anonymisierten Text hier einfügen]</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'Du bist Lehrkraft an einer Berufsbildenden Schule.\nFormuliere auf Basis der folgenden anonymisierten Praktikumsbeurteilung\neinen zusammenhängenden Beurteilungstext im Zeugnisduktus.\n\nAnforderungen:\n- Sachlich, wertschätzend, ohne Füllwörter\n- Stärken und Entwicklungsfelder fließend einweben (nicht als Liste)\n- Abschließende Empfehlung in einem Satz\n- Länge: ca. 120–150 Wörter\n- Platzhalter [NAME], [BETRIEB] etc. beibehalten\n\nBeurteilungsnotizen:\n[Anonymisierten Text hier einfügen]')">📋 Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prompt 2 -->
+        <div class="prompt-level level-2">
+            <div class="prompt-level-header">
+                <div class="level-badge">B</div>
+                <div>
+                    <h4>Elternbrief aus Protokoll ableiten</h4>
+                    <p>Das Gesprächsprotokoll als Grundlage für einen formellen Elternbrief.</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code">Du bist Klassenlehrer an einer Berufsbildenden Schule.
+Verfasse auf Grundlage des folgenden anonymisierten Gesprächsprotokolls
+einen kurzen Elternbrief, der die vereinbarten Maßnahmen schriftlich bestätigt.
+
+Anforderungen:
+- Formell, freundlich, klar strukturiert
+- Anrede mit [ANREDE] und [NAME_ELTERNTEIL]
+- Die vereinbarten Maßnahmen als kurze Aufzählung
+- Abschluss mit Dank und Gesprächsangebot
+- Platzhalter für alle Personenbezüge beibehalten
+
+Protokoll:
+[Anonymisierten Text hier einfügen]</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'Du bist Klassenlehrer an einer Berufsbildenden Schule.\nVerfasse auf Grundlage des folgenden anonymisierten Gesprächsprotokolls\neinen kurzen Elternbrief, der die vereinbarten Maßnahmen schriftlich bestätigt.\n\nAnforderungen:\n- Formell, freundlich, klar strukturiert\n- Anrede mit [ANREDE] und [NAME_ELTERNTEIL]\n- Die vereinbarten Maßnahmen als kurze Aufzählung\n- Abschluss mit Dank und Gesprächsangebot\n- Platzhalter für alle Personenbezüge beibehalten\n\nProtokoll:\n[Anonymisierten Text hier einfügen]')">📋 Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prompt 3 (optional) -->
+        <div class="prompt-level level-3">
+            <div class="prompt-level-header">
+                <div class="level-badge">C</div>
+                <div>
+                    <h4>Vorlage an anderen Schulzweig anpassen <em style="font-weight:400;color:#555;">(optional)</em></h4>
+                    <p>Dieselbe Vorlage für einen anderen Ausbildungsberuf umformulieren.</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code">Der folgende Beurteilungstext wurde für den Pflegebereich formuliert.
+Passe ihn sprachlich und inhaltlich für den Ausbildungsberuf [BERUF_NEU] an.
+Behalte die Struktur, ersetze aber fachspezifische Begriffe sinngemäß.
+Alle Platzhalter ([NAME], [BETRIEB] etc.) bleiben unverändert.
+
+Text:
+[Bestehende Vorlage hier einfügen]</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'Der folgende Beurteilungstext wurde für den Pflegebereich formuliert.\nPasse ihn sprachlich und inhaltlich für den Ausbildungsberuf [BERUF_NEU] an.\nBehalte die Struktur, ersetze aber fachspezifische Begriffe sinngemäß.\nAlle Platzhalter ([NAME], [BETRIEB] etc.) bleiben unverändert.\n\nText:\n[Bestehende Vorlage hier einfügen]')">📋 Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Eignung verschiedener Dokumenttypen -->
+        <h2 class="section-title">Welche Dokumente eignen sich?</h2>
+
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>Dokumenttyp</th>
+                    <th>LLM-Eignung</th>
+                    <th>Voraussetzung</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Praktikumsbeurteilung</strong></td>
+                    <td>✅ Gut geeignet</td>
+                    <td>Vollständige Anonymisierung vor Eingabe</td>
+                </tr>
+                <tr>
+                    <td><strong>Elternbrief (allgemein)</strong></td>
+                    <td>✅ Gut geeignet</td>
+                    <td>Namen durch Platzhalter ersetzen</td>
+                </tr>
+                <tr>
+                    <td><strong>Zeugnisformulierung (Verhalten/Leistung)</strong></td>
+                    <td>⚠️ Bedingt geeignet</td>
+                    <td>Juristisch prüfen; nur als Entwurf</td>
+                </tr>
+                <tr>
+                    <td><strong>Zeugnisnoten, Notenberechnungen</strong></td>
+                    <td>❌ Nicht geeignet</td>
+                    <td>Keine personenbezogenen Leistungsdaten</td>
+                </tr>
+                <tr>
+                    <td><strong>Amtliche Schreiben (Ordnungsmaßnahmen)</strong></td>
+                    <td>❌ Nicht geeignet</td>
+                    <td>Rechtlich bindend, kein LLM-Entwurf</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <!-- Zusatzaufgaben -->
+        <h2 class="section-title">Zusatzaufgaben</h2>
+
+        <div class="box box-yellow">
+            <strong>➕ Wenn Sie schneller fertig sind</strong>
+            <ul>
+                <li>Den Anonymisierungs-Prompt und den Beurteilungs-Prompt direkt hintereinander ausführen (<em>Prompt-Kette</em>) – spart einen manuellen Schritt</li>
+                <li>Dasselbe Dokument mit zwei verschiedenen Modellen generieren und die Texte vergleichen</li>
+                <li>Eigenes Dokument aus dem Schulalltag mitbringen, anonymisieren und ins Modell geben</li>
+                <li>Den Beurteilungstext in einen anderen Sprachstil umformulieren lassen: <em>„Formuliere formeller / weniger bürokratisch / kürzer"</em></li>
+            </ul>
+        </div>
+
+        <!-- Reflexion -->
+        <div class="box box-green">
+            <strong>🗣️ Reflexionsfragen für die Gruppe</strong>
+            <ul>
+                <li>Ist der zweistufige Anonymisierungsschritt im Schulalltag realistisch umsetzbar – oder zu aufwändig?</li>
+                <li>Wo liegt die Verantwortung, wenn ein LLM-generierter Beurteilungstext inhaltlich falsch ist?</li>
+                <li>Welche Dokumenttypen würden Sie sofort einsetzen – welche lieber nicht?</li>
+                <li>Wie könnte eine schulweite Richtlinie für den LLM-Einsatz bei Dokumenten aussehen?</li>
+            </ul>
+        </div>
+
+        <!-- Erwartetes Ergebnis -->
+        <div class="box box-blue">
+            <strong>✅ Erwartetes Ergebnis</strong>
+            <ul>
+                <li>Praxistaugliche Vorlagen für mindestens einen Dokumenttyp</li>
+                <li>Konkretes Verständnis des zweistufigen Anonymisierungsverfahrens</li>
+                <li>Gemeinsame Einschätzung: Welche Dokumenttypen im BBS-Betrieb eignen sich für LLM-Unterstützung, welche nicht</li>
+            </ul>
+        </div>
+
+    </div><!-- /page-body -->
+
+    <div class="page-footer">
+        <span>Workshop „Lokale LLMs in der Praxis" · Beispiel C</span>
+        <div style="display:flex; gap:1.5rem;">
+            <a href="beispiel-b.html">← Beispiel B</a>
+            <a href="beispiel-d.html">Beispiel D →</a>
+        </div>
+    </div>
+
+</div><!-- /page -->
+
+<script>
+    function copyCmd(btn, text) {
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = '✅ Kopiert!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '📋 Kopieren';
+                btn.classList.remove('copied');
+            }, 2200);
+        }).catch(() => {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.cssText = 'position:fixed;opacity:0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            btn.textContent = '✅ Kopiert!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '📋 Kopieren';
+                btn.classList.remove('copied');
+            }, 2200);
+        });
+    }
+</script>
+
+</body>
+</html>

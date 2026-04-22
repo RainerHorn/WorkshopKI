@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workshop: Lokale LLMs – Grundlagen</title>
+    <link rel="stylesheet" href="../Templates/styles.css">
+    <style>
+        html, body { height: 100%; overflow: hidden; margin: 0; padding: 0; }
+        html { font-size: 90%; }
+
+        /* ── Progress-Legende ── */
+        #legend {
+            position: fixed; top: 0; left: 0; right: 0; height: 2.8rem;
+            display: flex; align-items: stretch; z-index: 500;
+            background: rgba(15,30,70,0.55); backdrop-filter: blur(6px);
+            border-bottom: 1px solid rgba(255,255,255,0.12);
+        }
+        .legend-section {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            gap: 0.35rem; font-family: 'Segoe UI', sans-serif;
+            font-size: clamp(0.65rem, 1.1vw, 0.8rem); color: rgba(255,255,255,0.45);
+            cursor: pointer; padding: 0 0.4rem;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            transition: background 0.2s, color 0.2s; user-select: none; white-space: nowrap;
+            position: relative;
+        }
+        .legend-section:last-child { border-right: none; }
+        .legend-section:hover { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+        .legend-section.active { background: rgba(255,255,255,0.15); color: white; font-weight: 600; }
+        .legend-section .legend-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: rgba(255,255,255,0.3); flex-shrink: 0; transition: background 0.2s;
+        }
+        .legend-section.active .legend-dot { background: #90caf9; }
+        .legend-section.active::after {
+            content: ''; position: absolute; bottom: 0; height: 2px; width: 100%;
+            background: linear-gradient(90deg, #667eea, #90caf9);
+        }
+
+        /* ── Slide Container ── */
+        .slide-container {
+            width: 100vw; height: 100vh; position: relative;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .slide {
+            position: absolute; inset: 0; display: none; flex-direction: column;
+            padding: 3.8rem 3rem 2.5rem 3rem; box-sizing: border-box; overflow: hidden;
+        }
+        .slide.active { display: flex; }
+
+        /* ── Panel ── */
+        .slide-panel {
+            background: white; border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: hidden; flex: 1; display: flex; flex-direction: column;
+        }
+        .slide-panel .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white; padding: 1.2rem 2rem; flex-shrink: 0;
+        }
+        .slide-panel .header h1 { font-size: 1.8rem; margin: 0 0 0.2rem 0; font-weight: 700; }
+        .slide-panel .header p { font-size: 1rem; opacity: 0.85; margin: 0; }
+        .slide-panel .content {
+            padding: 1.5rem 2rem; overflow: hidden; flex: 1;
+            display: flex; flex-direction: column; gap: 0.8rem;
+        }
+
+        /* ── Layouts ── */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; flex: 1; }
+        .col-card {
+            background: #f8f9ff; border-radius: 12px; padding: 1.2rem 1.4rem;
+            border: 1px solid #e0e4f4; display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .col-card h3 { font-size: 2rem; font-weight: 700; color: #1e3c72; margin: 0 0 0.4rem 0; }
+        .col-card ul { margin: 0; padding-left: 1.6rem; font-size: 1.9rem; color: #444; }
+        .col-card ul li { margin: 0.4rem 0; }
+
+        /* ── Vergleichstabelle ── */
+        .cmp-table { width: 100%; border-collapse: collapse; font-size: 1.9rem; }
+        .cmp-table th {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white; padding: 0.7rem 1rem; text-align: left; font-weight: 600;
+        }
+        .cmp-table th:first-child { border-radius: 8px 0 0 0; }
+        .cmp-table th:last-child { border-radius: 0 8px 0 0; }
+        .cmp-table td { padding: 0.65rem 1rem; border-bottom: 1px solid #e9ecef; color: #333; }
+        .cmp-table tr:nth-child(even) td { background: #f8f9ff; }
+        .cmp-table tr:last-child td { border-bottom: none; }
+        .cmp-table .ok { color: #2e7d32; font-weight: 600; }
+        .cmp-table .warn { color: #b7950b; font-weight: 600; }
+        .cmp-table .bad { color: #c0392b; }
+
+        /* ── Begriffe-Kacheln ── */
+        .begriffe-grid {
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.7rem; flex: 1;
+        }
+        .begriff-card {
+            background: linear-gradient(135deg, #ffffff, #f0f3ff);
+            border-radius: 12px; padding: 0.9rem; border: 1px solid #dde2f5;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.07); display: flex; flex-direction: column;
+            gap: 0.35rem;
+        }
+        .begriff-card .icon { font-size: 2.8rem; }
+        .begriff-card h4 { font-size: 1.8rem; font-weight: 700; color: #1e3c72; margin: 0; }
+        .begriff-card p { font-size: 1.6rem; color: #555; margin: 0; line-height: 1.4; }
+
+        /* ── LLM-Grundlagen ── */
+        .llm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; flex: 1; }
+        .llm-card {
+            border-radius: 12px; padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: 0.3rem;
+        }
+        .llm-card h4 { font-size: 2rem; font-weight: 700; margin: 0; }
+        .llm-card p { font-size: 1.75rem; line-height: 1.45; margin: 0; }
+        .llm-card.blue { background: #e3f2fd; border-left: 4px solid #2196f3; }
+        .llm-card.blue h4 { color: #1565c0; }
+        .llm-card.purple { background: #ede7f6; border-left: 4px solid #7c3aed; }
+        .llm-card.purple h4 { color: #5b21b6; }
+        .llm-card.green { background: #e8f5e9; border-left: 4px solid #4caf50; }
+        .llm-card.green h4 { color: #2e7d32; }
+        .llm-card.orange { background: #fff3e0; border-left: 4px solid #ff9800; }
+        .llm-card.orange h4 { color: #e65100; }
+        .llm-intro {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-left: 4px solid #667eea; border-radius: 8px;
+            padding: 0.8rem 1rem; font-size: 1.9rem; color: #333;
+        }
+
+        /* ── Navigation ── */
+        .slide-nav {
+            position: fixed; bottom: 1.2rem; right: 1.5rem;
+            display: flex; align-items: center; gap: 0.6rem; z-index: 1000;
+        }
+        .slide-nav-btn {
+            background: linear-gradient(135deg, #1e3c72, #2a5298); color: white;
+            border: none; border-radius: 50%; width: 48px; height: 48px;
+            font-size: 1.3rem; cursor: pointer; box-shadow: 0 4px 15px rgba(30,60,114,0.5);
+            transition: box-shadow 0.2s, transform 0.2s; text-decoration: none;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .slide-nav-btn:hover { box-shadow: 0 6px 20px rgba(30,60,114,0.7); transform: translateY(-2px); }
+        .slide-nav-btn:disabled { opacity: 0.35; cursor: default; transform: none; }
+        .slide-counter {
+            position: fixed; bottom: 1.4rem; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.85); font-size: 0.95rem;
+            font-family: 'Segoe UI', sans-serif; letter-spacing: 0.05em;
+        }
+        .home-link {
+            position: fixed; top: 1rem; left: 1.2rem; color: rgba(255,255,255,0.7);
+            font-family: 'Segoe UI', sans-serif; font-size: 0.9rem; text-decoration: none;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 8px; padding: 0.35rem 0.8rem; transition: background 0.2s; z-index: 1000;
+        }
+        .home-link:hover { background: rgba(255,255,255,0.2); color: white; }
+    </style>
+</head>
+<body>
+
+<a href="index.html" class="home-link">← Übersicht</a>
+
+<nav id="legend">
+    <div class="legend-section" data-section="0" onclick="goToSection(0)">
+        <span class="legend-dot"></span> Einstieg
+    </div>
+    <div class="legend-section active" data-section="1" onclick="goToSection(1)">
+        <span class="legend-dot"></span> Grundlagen
+    </div>
+    <div class="legend-section" data-section="2" onclick="goToSection(2)">
+        <span class="legend-dot"></span> LLM &amp; Tools
+    </div>
+    <div class="legend-section" data-section="3" onclick="goToSection(3)">
+        <span class="legend-dot"></span> Live-Demo
+    </div>
+    <div class="legend-section" data-section="4" onclick="goToSection(4)">
+        <span class="legend-dot"></span> Praxisbeispiele
+    </div>
+    <div class="legend-section" data-section="5" onclick="goToSection(5)">
+        <span class="legend-dot"></span> Abschluss
+    </div>
+</nav>
+
+<div class="slide-container">
+
+    <!-- Folie 3: Zielgruppe & Voraussetzungen -->
+    <div class="slide active" id="slide-1">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Zielgruppe &amp; Voraussetzungen</h1>
+                <p>Für wen ist dieser Workshop gedacht?</p>
+            </div>
+            <div class="content">
+                <div class="two-col">
+                    <div class="col-card">
+                        <h3>👥 Zielgruppe</h3>
+                        <ul>
+                            <li>Lehrkräfte an berufsbildenden Schulen</li>
+                            <li>Keine Programmierkenntnisse nötig</li>
+                            <li>Grundlegende PC-Kenntnisse genügen</li>
+                            <li>Bereitschaft zum Ausprobieren</li>
+                        </ul>
+                    </div>
+                    <div class="col-card">
+                        <h3>⚙️ Voraussetzungen</h3>
+                        <ul>
+                            <li><strong>min. 16 GB RAM</strong> (empf. 32 GB)</li>
+                            <li>Freier Speicherplatz: min. <strong>10 GB</strong></li>
+                            <li>Ollama oder LM Studio installiert</li>
+                            <li>Modell vorab geladen (z. B. <code>llama3.2</code>)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="background:#e8f5e9; border-left:4px solid #4caf50; border-radius:8px; padding:0.7rem 1rem; font-size:1.9rem; color:#2e7d32; margin-top:auto;">
+                    💡 Installationsanleitung und Modell-Download wurden vorab per E-Mail versandt.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie 4: Ablauf & Zeitplan -->
+    <div class="slide" id="slide-2">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Ablauf &amp; Zeitplan</h1>
+                <p>Überblick über die Workshop-Blöcke</p>
+            </div>
+            <div class="content">
+                <div style="display:flex; flex-direction:column; gap:0.6rem; flex:1; font-family:'Segoe UI',sans-serif; font-size:2rem;">
+                    <div style="display:flex; align-items:center; gap:1rem; padding:0.7rem 1.2rem; border-radius:10px; background:linear-gradient(135deg,#e8eaf6,#dde1f9); border-left:5px solid #667eea;">
+                        <span style="font-size:2.2rem;">👋</span>
+                        <strong style="color:#1e3c72;">Einstieg &amp; Kontext</strong>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:1rem; padding:0.7rem 1.2rem; border-radius:10px; background:linear-gradient(135deg,#e3f2fd,#bbdefb); border-left:5px solid #2196f3;">
+                        <span style="font-size:2.2rem;">🧠</span>
+                        <strong style="color:#1e3c72;">Grundlagen &amp; Überblick</strong>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:1rem; padding:0.7rem 1.2rem; border-radius:10px; background:linear-gradient(135deg,#fff8e1,#ffecb3); border-left:5px solid #ffc107;">
+                        <span style="font-size:2.2rem;">🖥️</span>
+                        <strong style="color:#1e3c72;">Live-Demo</strong>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:1rem; padding:0.7rem 1.2rem; border-radius:10px; background:linear-gradient(135deg,#e8f5e9,#c8e6c9); border-left:5px solid #4caf50;">
+                        <span style="font-size:2.2rem;">🛠️</span>
+                        <strong style="color:#1e3c72;">Praxisbeispiele (Gruppenarbeit)</strong>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:1rem; padding:0.7rem 1.2rem; border-radius:10px; background:linear-gradient(135deg,#fce4ec,#f8bbd0); border-left:5px solid #e91e63;">
+                        <span style="font-size:2.2rem;">✅</span>
+                        <strong style="color:#1e3c72;">Review &amp; Abschluss</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie 5: Was ist ein LLM? -->
+    <div class="slide" id="slide-3">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Was ist ein LLM?</h1>
+                <p>Large Language Models – verständlich erklärt</p>
+            </div>
+            <div class="content">
+                <div class="llm-intro">
+                    Ein <strong>LLM (Large Language Model)</strong> ist eine KI, die auf riesigen Textmengen trainiert wurde und Sprache verstehen und erzeugen kann.
+                </div>
+                <div class="llm-grid">
+                    <div class="llm-card blue">
+                        <h4>🔁 Transformer-Architektur</h4>
+                        <p>Erkennt Beziehungen zwischen Wörtern – auch über große Textabstände hinweg.</p>
+                    </div>
+                    <div class="llm-card purple">
+                        <h4>📚 Training &amp; Gewichte</h4>
+                        <p>Das Modell lernt aus Milliarden Texten. Ergebnis: eine Datei mit gelernten Gewichten.</p>
+                    </div>
+                    <div class="llm-card orange">
+                        <h4>⚡ Inferenz</h4>
+                        <p>Beim Nutzen berechnet das Modell die Antwort Token für Token – lokal, ohne Internet.</p>
+                    </div>
+                    <div class="llm-card green">
+                        <h4>🔢 Token</h4>
+                        <p>Modelle arbeiten mit Wortteilen (Tokens). Das Kontextfenster begrenzt die Textmenge.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie 6: Lokal vs. Cloud -->
+    <div class="slide" id="slide-4">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Lokal vs. Cloud</h1>
+                <p>Wann lohnt sich ein lokales Modell?</p>
+            </div>
+            <div class="content">
+                <table class="cmp-table">
+                    <thead>
+                        <tr>
+                            <th>Kriterium</th>
+                            <th>☁️ Cloud-LLM</th>
+                            <th>🖥️ Lokales LLM</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Datenschutz</strong></td>
+                            <td class="warn">⚠️ Daten verlassen das Gerät</td>
+                            <td class="ok">✅ Vollständig lokal</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Qualität</strong></td>
+                            <td class="ok">✅ Meist besser</td>
+                            <td class="warn">⚠️ Abhängig von Hardware</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kosten</strong></td>
+                            <td class="warn">⚠️ Laufendes Abo</td>
+                            <td class="ok">✅ Einmalig</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Offline</strong></td>
+                            <td class="bad">✗ Internet nötig</td>
+                            <td class="ok">✅ Komplett offline</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="background:#fff3cd; border-left:4px solid #ffc107; border-radius:8px; padding:0.65rem 1rem; font-size:1.9rem; color:#7d6608; margin-top:auto;">
+                    💡 Für Schule und sensible Daten: lokale LLMs sind die erste Wahl.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Folie 7: Wichtige Begriffe -->
+    <div class="slide" id="slide-5">
+        <div class="slide-panel">
+            <div class="header">
+                <h1>Wichtige Begriffe</h1>
+                <p>Das kleine LLM-Glossar</p>
+            </div>
+            <div class="content">
+                <div class="begriffe-grid">
+                    <div class="begriff-card">
+                        <span class="icon">🤖</span>
+                        <h4>Modell</h4>
+                        <p>Trainierte KI-Datei mit gelernten Gewichten (z. B. <code>llama3.2:8b</code>).</p>
+                    </div>
+                    <div class="begriff-card">
+                        <span class="icon">⚡</span>
+                        <h4>Inferenz</h4>
+                        <p>Das Ausführen des Modells – Antwort wird Token für Token berechnet.</p>
+                    </div>
+                    <div class="begriff-card">
+                        <span class="icon">🔢</span>
+                        <h4>Token</h4>
+                        <p>Kleinstes Textstück. Ein Wort = 1–3 Tokens. Budget: bis 128 000 pro Anfrage.</p>
+                    </div>
+                    <div class="begriff-card">
+                        <span class="icon">📏</span>
+                        <h4>Kontext&shy;fenster</h4>
+                        <p>Maximale Textmenge, die das Modell auf einmal verarbeiten kann.</p>
+                    </div>
+                    <div class="begriff-card">
+                        <span class="icon">🗜️</span>
+                        <h4>Quanti&shy;sierung</h4>
+                        <p>Komprimierung (z. B. Q4). Spart RAM – minimal weniger Genauigkeit.</p>
+                    </div>
+                </div>
+                <div style="background:#e8f5e9; border-left:4px solid #4caf50; border-radius:8px; padding:0.65rem 1rem; font-size:1.9rem; color:#2e7d32; margin-top:auto;">
+                    🎯 Für den Schulalltag reicht Q4 – spart RAM und startet schneller.
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- .slide-container -->
+
+<nav class="slide-nav">
+    <button class="slide-nav-btn" id="btn-prev" title="Zurück" onclick="navigatePrev()">◀</button>
+    <button class="slide-nav-btn" id="btn-next" title="Weiter" onclick="navigateNext()">▶</button>
+</nav>
+<div class="slide-counter" id="slide-counter">1 / 1</div>
+
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const TOTAL_GLOBAL = 16; // Gesamtfolien über alle Dateien
+
+    // Abschnittsgrenzen innerhalb dieser Datei (0-basiert)
+    // Grundlagen: Folien 0-1 (global 3-4)
+    // LLM & Tools: Folien 2-4 (global 5-7)
+    const localSections = [
+        null,                        // 0 Einstieg → andere Datei
+        { start: 0, end: 1 },        // 1 Grundlagen
+        { start: 2, end: 4 },        // 2 LLM & Tools
+        null,                        // 3 Live-Demo → andere Datei
+        null,                        // 4 Praxisbeispiele → andere Datei
+        null,                        // 5 Abschluss → andere Datei
+    ];
+    // Externe Ziele für Sektionen außerhalb dieser Datei
+    const sectionFiles = [
+        'praesentation.html',        // 0 Einstieg
+        null,                        // 1 Grundlagen (lokal)
+        null,                        // 2 LLM & Tools (lokal)
+        'praesentation-3.html',      // 3 Live-Demo
+        'praesentation-4.html',      // 4 Praxisbeispiele
+        'praesentation-4.html',      // 5 Abschluss
+    ];
+
+    const legendItems = document.querySelectorAll('.legend-section');
+
+    function getSectionIndex(slideIdx) {
+        for (let i = localSections.length - 1; i >= 0; i--) {
+            const s = localSections[i];
+            if (s && slideIdx >= s.start) return i;
+        }
+        return 1; // Fallback: Grundlagen
+    }
+
+    function updateLegend(slideIdx) {
+        const active = getSectionIndex(slideIdx);
+        legendItems.forEach((el, i) => el.classList.toggle('active', i === active));
+    }
+
+    function goTo(n) {
+        slides[currentSlide].classList.remove('active');
+        currentSlide = Math.max(0, Math.min(n, slides.length - 1));
+        slides[currentSlide].classList.add('active');
+        document.getElementById('slide-counter').textContent =
+            `${currentSlide + 1} / ${slides.length}`;
+        document.getElementById('btn-prev').disabled = false;
+        document.getElementById('btn-next').disabled = false;
+        updateLegend(currentSlide);
+    }
+
+    function navigatePrev() {
+        if (currentSlide === 0) {
+            window.location.href = 'praesentation.html#last';
+        } else {
+            goTo(currentSlide - 1);
+        }
+    }
+
+    function navigateNext() {
+        if (currentSlide === slides.length - 1) {
+            window.location.href = 'praesentation-3.html';
+        } else {
+            goTo(currentSlide + 1);
+        }
+    }
+
+    function goToSection(idx) {
+        const s = localSections[idx];
+        if (s) {
+            goTo(s.start);
+        } else if (sectionFiles[idx]) {
+            window.location.href = sectionFiles[idx];
+        }
+    }
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') navigateNext();
+        if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')                     navigatePrev();
+    });
+
+    if (window.location.hash === '#last') {
+        goTo(slides.length - 1);
+    } else {
+        goTo(0);
+    }
+</script>
+
+</body>
+</html>

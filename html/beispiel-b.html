@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beispiel B: Lernstandsanalyse &amp; individuelles Feedback</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.1rem;
+            line-height: 1.85;
+            color: #222;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 3rem 10%;
+        }
+
+        .page {
+            max-width: 100%;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+            overflow: hidden;
+        }
+
+        /* ── Header ── */
+        .page-header {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            padding: 2.5rem 3rem;
+        }
+        .page-header .label {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+        }
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .page-header p {
+            font-size: 1.05rem;
+            opacity: 0.85;
+        }
+
+        /* ── Inhalt ── */
+        .page-body {
+            padding: 3rem 3.5rem;
+        }
+
+        /* ── Abschnittsüberschrift ── */
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e3c72;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+            margin: 3rem 0 1.8rem 0;
+        }
+        .section-title:first-of-type { margin-top: 0; }
+
+        p { margin: 0.8rem 0; }
+        ul, ol { padding-left: 1.6rem; margin: 0.8rem 0; }
+        li { margin: 0.45rem 0; }
+
+        /* ── Boxen ── */
+        .box {
+            border-radius: 10px;
+            padding: 1.4rem 1.8rem;
+            margin: 1.8rem 0;
+            line-height: 1.85;
+        }
+        .box-blue   { background: #eef4ff; border-left: 4px solid #2a5298; }
+        .box-green  { background: #eaf7ea; border-left: 4px solid #43a047; }
+        .box-yellow { background: #fffbea; border-left: 4px solid #f59e0b; }
+        .box-red    { background: #fff1f0; border-left: 4px solid #e53e3e; }
+        .box-orange { background: #fff8f0; border-left: 4px solid #e65100; }
+        .box strong { display: block; margin-bottom: 0.5rem; }
+        .box ul { padding-left: 1.4rem; margin: 0.5rem 0 0 0; }
+        .box li { margin: 0.4rem 0; }
+
+        /* ── Code-Block ── */
+        .cmd {
+            background: #18243a;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 1.4rem 0;
+        }
+        .cmd-label {
+            padding: 0.55rem 1.5rem;
+            background: rgba(255,255,255,0.07);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.8rem;
+            color: #7a99cc;
+            text-transform: uppercase;
+            letter-spacing: 0.07em;
+        }
+        .cmd-code {
+            padding: 1.3rem 1.5rem;
+            font-family: 'Cascadia Code', 'Consolas', 'Courier New', monospace;
+            font-size: 0.97rem;
+            color: #9fdfb0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.7;
+        }
+        /* Beispieldaten-Block: etwas kompakter */
+        .cmd-example .cmd-code {
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        .cmd-footer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0.55rem 1rem;
+            background: rgba(255,255,255,0.05);
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        .copy-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.25);
+            color: #9ab4d8;
+            border-radius: 6px;
+            padding: 0.3rem 0.95rem;
+            font-size: 0.88rem;
+            cursor: pointer;
+            transition: background 0.18s, color 0.18s;
+            white-space: nowrap;
+        }
+        .copy-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+        .copy-btn.copied { background: #2e7d32; border-color: #4caf50; color: #fff; }
+
+        code {
+            background: #eef2ff;
+            color: #1e3c72;
+            padding: 0.15em 0.45em;
+            border-radius: 4px;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            font-size: 0.92em;
+        }
+
+        /* ── Prompt-Stufen ── */
+        .prompt-level {
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 2rem 0;
+        }
+        .prompt-level-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            background: #f8faff;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+        .level-1 .level-badge { background: #ffe0e0; color: #c62828; }
+        .level-2 .level-badge { background: #fff8e0; color: #c27d00; }
+        .level-3 .level-badge { background: #e0f5e0; color: #276227; }
+        .prompt-level-header h4 { color: #1e3c72; font-size: 1.05rem; font-weight: 700; }
+        .prompt-level-header p  { color: #666; font-size: 0.95rem; margin: 0; }
+        .prompt-level .cmd { margin: 0; border-radius: 0; }
+        .prompt-level .cmd-label { display: none; }
+
+        /* ── Vergleichstabelle ── */
+        .result-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.8rem 0;
+            font-size: 1rem;
+        }
+        .result-table th {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            padding: 0.9rem 1.2rem;
+            text-align: left;
+            font-weight: 600;
+        }
+        .result-table td {
+            padding: 0.85rem 1.2rem;
+            border-bottom: 1px solid #e9ecef;
+            vertical-align: top;
+        }
+        .result-table tr:nth-child(even) td { background: #f8f9fa; }
+        .result-table tr:hover td { background: #eef4ff; }
+
+        /* ── Datenschutz-Badge ── */
+        .datenschutz-badge {
+            display: inline-block;
+            background: #e53e3e;
+            color: white;
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-left: 0.4rem;
+            vertical-align: middle;
+        }
+
+        /* ── Trennlinie ── */
+        hr { border: none; border-top: 2px solid #eef0f5; margin: 3.5rem 0; }
+
+        /* ── Footer ── */
+        .page-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.6rem 3.5rem;
+            border-top: 2px solid #eef0f5;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        .page-footer a {
+            color: #2a5298;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .page-footer a:hover { text-decoration: underline; }
+
+        @media (max-width: 600px) {
+            body { padding: 1.2rem 0.8rem; }
+            .page-body { padding: 2rem 1.5rem; }
+            .page-header { padding: 2rem 1.5rem; }
+            .page-header h1 { font-size: 1.6rem; }
+            .page-footer { flex-direction: column; gap: 0.6rem; padding: 1.4rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <div class="label">Teilnehmerarbeit · Beispiel B</div>
+        <h1>Lernstandsanalyse &amp; individuelles Feedback</h1>
+        <p>Beurteilungsnotizen als Kontext – und verstehen, welche Daten lokal verarbeitet werden dürfen.</p>
+    </div>
+
+    <div class="page-body">
+
+        <!-- Aufgabe -->
+        <div class="box box-green">
+            <strong>🎯 Aufgabe</strong>
+            <ul>
+                <li>Anonymisierte oder pseudonymisierte Beurteilungsnotizen aus dem BBS-Alltag als Kontext einfügen</li>
+                <li>Das lokale LLM individuelle Rückmeldungen, Förderpläne oder Zeugnisformulierungen daraus ableiten lassen</li>
+                <li>Testen, wie das Modell reagiert, wenn personenbezogene Daten (Name, Geburtsdatum) im Kontext enthalten sind</li>
+                <li>Die Ergebnisse mit und ohne Pseudonymisierung vergleichen</li>
+            </ul>
+        </div>
+
+        <div class="box box-red">
+            <strong>🔒 Datenschutz-Hinweis – bitte zuerst lesen</strong>
+            <ul>
+                <li>Verwenden Sie <strong>ausschließlich die Beispieldaten</strong> unten oder eigene, vollständig anonymisierte Daten</li>
+                <li>Echte Namen, Geburtsdaten oder Schüler-IDs dürfen <strong>nicht</strong> in ein KI-Modell eingegeben werden – auch nicht in ein lokales</li>
+                <li>In Schritt 3 testen wir absichtlich, was passiert, wenn man es doch tut – als Lerneffekt</li>
+            </ul>
+        </div>
+
+        <div class="box box-blue">
+            <strong>💡 Was Sie brauchen</strong>
+            <ul>
+                <li>Ein laufendes lokales Modell (z. B. <code>phi3:mini</code> oder <code>llama3.1:8b</code>)</li>
+                <li>Die Beispieldaten unten – oder eigene, vorab anonymisierte Notizen</li>
+                <li>Open WebUI im Browser <em>oder</em> Ollama im Terminal</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <!-- Beispieldaten A: pseudonymisiert -->
+        <h2 class="section-title">Beispieldaten – Pseudonymisiert</h2>
+
+        <p>Diese Daten enthalten nur Kürzel statt echter Namen. Kopieren Sie den Block als Kontext
+           in Ihren Prompt (Stufen 1 und 2 unten).</p>
+
+        <div class="cmd cmd-example">
+            <div class="cmd-label">Beurteilungsnotizen – pseudonymisiert (S1–S5)</div>
+            <div class="cmd-code">Klasse: ITA 12b | Ausbildungsberuf: IT-Systemkaufleute | Schuljahr 2025/26 | KW 14
+
+S1 (Kürzel: MK):
+- Fachkompetenz: Sehr sicher im Bereich Netzwerktopologien; Lücken bei Subnetting
+- Methodenkompetenz: Strukturiertes Vorgehen bei Aufgaben, nutzt Mindmaps eigenständig
+- Sozialkompetenz: Übernimmt häufig informelle Moderationsrolle in der Gruppe
+- Selbstkompetenz: Hohe Eigenmotivation; meldet sich bei Problemen rechtzeitig
+- Fehlzeiten: 3 Stunden unentschuldigt (KW 12)
+- Aktuelle Leistung: Note 2 schriftlich, Note 1 mündlich
+
+S2 (Kürzel: JL):
+- Fachkompetenz: Grundlagen vorhanden, Anwendung auf neue Szenarien fällt schwer
+- Methodenkompetenz: Aufgaben werden bearbeitet, aber ohne erkennbare Strategie
+- Sozialkompetenz: Zurückhaltend, beteiligt sich kaum an Gruppenarbeit
+- Selbstkompetenz: Fragt selten nach, auch wenn Verständnislücken sichtbar sind
+- Fehlzeiten: 12 Stunden (6 entschuldigt, 6 unentschuldigt)
+- Aktuelle Leistung: Note 4 schriftlich, Note 4 mündlich
+
+S3 (Kürzel: TS):
+- Fachkompetenz: Überdurchschnittliche Leistungen in Datenbankmodellierung und SQL
+- Methodenkompetenz: Sehr systematisch; erstellt eigenständig Checklisten und Testpläne
+- Sozialkompetenz: Unterstützt Mitschülerinnen und Mitschüler proaktiv
+- Selbstkompetenz: Setzt sich ambitionierte eigene Ziele; gelegentlich Perfektionismusprobleme
+- Fehlzeiten: 0 Stunden
+- Aktuelle Leistung: Note 1 schriftlich und mündlich
+
+S4 (Kürzel: RP):
+- Fachkompetenz: Deutliche Schwächen in allen Theoriebereichen; Praxisaufgaben besser
+- Methodenkompetenz: Profitiert stark von visuellen Hilfen und konkreten Beispielen
+- Sozialkompetenz: Beliebt in der Klasse, engagiert sich im Klassensprecher-Team
+- Selbstkompetenz: Überschätzt eigene Leistungsstand regelmäßig; Feedback wird akzeptiert
+- Fehlzeiten: 2 Stunden entschuldigt
+- Aktuelle Leistung: Note 5 schriftlich, Note 3 mündlich
+
+S5 (Kürzel: AW):
+- Fachkompetenz: Solide Kenntnisse, Niveau liegt gleichmäßig auf 3er-Niveau
+- Methodenkompetenz: Arbeitet zuverlässig, bleibt aber selten über Mindestanforderungen hinaus
+- Sozialkompetenz: Kooperativ und zuverlässig in Gruppenarbeiten
+- Selbstkompetenz: Stabile Selbsteinschätzung, wenig Eigeninitiative bei Vertiefung
+- Fehlzeiten: 4 Stunden entschuldigt
+- Aktuelle Leistung: Note 3 schriftlich und mündlich</div>
+            <div class="cmd-footer">
+                <button class="copy-btn" onclick="copyCmd(this, document.getElementById('daten-pseudo').textContent)">📋 Kopieren</button>
+            </div>
+        </div>
+        <textarea id="daten-pseudo" style="display:none">Klasse: ITA 12b | Ausbildungsberuf: IT-Systemkaufleute | Schuljahr 2025/26 | KW 14
+
+S1 (Kürzel: MK):
+- Fachkompetenz: Sehr sicher im Bereich Netzwerktopologien; Lücken bei Subnetting
+- Methodenkompetenz: Strukturiertes Vorgehen bei Aufgaben, nutzt Mindmaps eigenständig
+- Sozialkompetenz: Übernimmt häufig informelle Moderationsrolle in der Gruppe
+- Selbstkompetenz: Hohe Eigenmotivation; meldet sich bei Problemen rechtzeitig
+- Fehlzeiten: 3 Stunden unentschuldigt (KW 12)
+- Aktuelle Leistung: Note 2 schriftlich, Note 1 mündlich
+
+S2 (Kürzel: JL):
+- Fachkompetenz: Grundlagen vorhanden, Anwendung auf neue Szenarien fällt schwer
+- Methodenkompetenz: Aufgaben werden bearbeitet, aber ohne erkennbare Strategie
+- Sozialkompetenz: Zurückhaltend, beteiligt sich kaum an Gruppenarbeit
+- Selbstkompetenz: Fragt selten nach, auch wenn Verständnislücken sichtbar sind
+- Fehlzeiten: 12 Stunden (6 entschuldigt, 6 unentschuldigt)
+- Aktuelle Leistung: Note 4 schriftlich, Note 4 mündlich
+
+S3 (Kürzel: TS):
+- Fachkompetenz: Überdurchschnittliche Leistungen in Datenbankmodellierung und SQL
+- Methodenkompetenz: Sehr systematisch; erstellt eigenständig Checklisten und Testpläne
+- Sozialkompetenz: Unterstützt Mitschülerinnen und Mitschüler proaktiv
+- Selbstkompetenz: Setzt sich ambitionierte eigene Ziele; gelegentlich Perfektionismusprobleme
+- Fehlzeiten: 0 Stunden
+- Aktuelle Leistung: Note 1 schriftlich und mündlich
+
+S4 (Kürzel: RP):
+- Fachkompetenz: Deutliche Schwächen in allen Theoriebereichen; Praxisaufgaben besser
+- Methodenkompetenz: Profitiert stark von visuellen Hilfen und konkreten Beispielen
+- Sozialkompetenz: Beliebt in der Klasse, engagiert sich im Klassensprecher-Team
+- Selbstkompetenz: Überschätzt eigene Leistungsstand regelmäßig; Feedback wird akzeptiert
+- Fehlzeiten: 2 Stunden entschuldigt
+- Aktuelle Leistung: Note 5 schriftlich, Note 3 mündlich
+
+S5 (Kürzel: AW):
+- Fachkompetenz: Solide Kenntnisse, Niveau liegt gleichmäßig auf 3er-Niveau
+- Methodenkompetenz: Arbeitet zuverlässig, bleibt aber selten über Mindestanforderungen hinaus
+- Sozialkompetenz: Kooperativ und zuverlässig in Gruppenarbeiten
+- Selbstkompetenz: Stabile Selbsteinschätzung, wenig Eigeninitiative bei Vertiefung
+- Fehlzeiten: 4 Stunden entschuldigt
+- Aktuelle Leistung: Note 3 schriftlich und mündlich</textarea>
+
+        <hr>
+
+        <!-- Prompts -->
+        <h2 class="section-title">Prompts – drei Schritte</h2>
+
+        <!-- Schritt 1 -->
+        <div class="prompt-level level-1">
+            <div class="prompt-level-header">
+                <div class="level-badge">1</div>
+                <div>
+                    <h4>Individuelle Rückmeldung erzeugen</h4>
+                    <p>Für eine einzelne Schülerin oder einen einzelnen Schüler – einfacher Einstieg.</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code">Du bist Klassenlehrer einer Berufsschulklasse.
+Schreibe eine kurze, wertschätzende Rückmeldung an Schüler S2 (Kürzel: JL)
+auf Grundlage der folgenden Beurteilungsnotizen.
+Die Rückmeldung soll 3–4 Sätze umfassen und konkrete Empfehlungen enthalten.
+
+[Beurteilungsnotizen hier einfügen]</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'Du bist Klassenlehrer einer Berufsschulklasse.\nSchreibe eine kurze, wertschätzende Rückmeldung an Schüler S2 (Kürzel: JL)\nauf Grundlage der folgenden Beurteilungsnotizen.\nDie Rückmeldung soll 3–4 Sätze umfassen und konkrete Empfehlungen enthalten.\n\n[Beurteilungsnotizen hier einfügen]')">📋 Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schritt 2 -->
+        <div class="prompt-level level-2">
+            <div class="prompt-level-header">
+                <div class="level-badge">2</div>
+                <div>
+                    <h4>Förderplan für die ganze Klasse</h4>
+                    <p>Alle fünf Datensätze als Kontext – das Modell soll differenzieren.</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code">Du bist erfahrene Lehrerin an einer Berufsbildenden Schule.
+Die folgenden Beurteilungsnotizen beschreiben fünf Auszubildende.
+
+Erstelle für jede Person einen individuellen Förderhinweis (max. 3 Stichpunkte),
+der konkrete Maßnahmen im Unterricht nennt.
+Fasse am Ende in 2–3 Sätzen zusammen, welche übergreifenden Maßnahmen
+für die gesamte Klasse sinnvoll wären.
+
+Beurteilungsnotizen:
+[Beurteilungsnotizen hier einfügen]</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'Du bist erfahrene Lehrerin an einer Berufsbildenden Schule.\nDie folgenden Beurteilungsnotizen beschreiben fünf Auszubildende.\n\nErstelle für jede Person einen individuellen Förderhinweis (max. 3 Stichpunkte),\nder konkrete Maßnahmen im Unterricht nennt.\nFasse am Ende in 2–3 Sätzen zusammen, welche übergreifenden Maßnahmen\nfür die gesamte Klasse sinnvoll wären.\n\nBeurteilungsnotizen:\n[Beurteilungsnotizen hier einfügen]')">📋 Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schritt 3: Datenschutz-Test -->
+        <div class="prompt-level level-3">
+            <div class="prompt-level-header">
+                <div class="level-badge">3</div>
+                <div>
+                    <h4>Datenschutz-Test <span class="datenschutz-badge">Lerneffekt</span></h4>
+                    <p>Absichtlich echte Namen einsetzen – was ändert sich an der Ausgabe?</p>
+                </div>
+            </div>
+            <div class="cmd">
+                <div class="cmd-code">Ersetzen Sie in den Beurteilungsnotizen die Kürzel durch
+fiktive Klarnamen, z. B.:
+  S1 → „Max Mustermann"
+  S2 → „Laura Musterfrau"
+  S3 → „Tim Testperson"
+
+Führen Sie dann denselben Prompt aus wie in Schritt 2.
+
+Beobachten Sie:
+→ Ändert sich die Qualität der Antwort?
+→ Warnt das Modell vor dem Datenschutzproblem?
+→ Was würde passieren, wenn es sich um echte Schülerdaten handelte?</div>
+                <div class="cmd-footer">
+                    <button class="copy-btn" onclick="copyCmd(this, 'Ersetzen Sie in den Beurteilungsnotizen die Kürzel durch\nfiktive Klarnamen, z. B.:\n  S1 → „Max Mustermann"\n  S2 → „Laura Musterfrau"\n  S3 → „Tim Testperson"\n\nFühren Sie dann denselben Prompt aus wie in Schritt 2.\n\nBeobachten Sie:\n→ Ändert sich die Qualität der Antwort?\n→ Warnt das Modell vor dem Datenschutzproblem?\n→ Was würde passieren, wenn es sich um echte Schülerdaten handelte?')">📋 Kopieren</button>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Vergleich -->
+        <h2 class="section-title">Ergebnisse vergleichen</h2>
+
+        <table class="result-table">
+            <thead>
+                <tr>
+                    <th>Kriterium</th>
+                    <th>Pseudonymisiert</th>
+                    <th>Mit Klarnamen</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Qualität der Rückmeldung</strong></td>
+                    <td></td><td></td>
+                </tr>
+                <tr>
+                    <td><strong>Modell warnt vor Datenschutz?</strong></td>
+                    <td></td><td></td>
+                </tr>
+                <tr>
+                    <td><strong>Ergebnis direkt nutzbar?</strong></td>
+                    <td></td><td></td>
+                </tr>
+                <tr>
+                    <td><strong>Risiko im Schulalltag?</strong></td>
+                    <td></td><td></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <!-- Zusatzaufgaben -->
+        <h2 class="section-title">Zusatzaufgaben</h2>
+
+        <div class="box box-yellow">
+            <strong>➕ Wenn Sie schneller fertig sind</strong>
+            <ul>
+                <li>Zeugnisformulierung statt Förderhinweis: <em>„Schreibe eine knappe Aussage im Zeugnisduktus für S3."</em></li>
+                <li>Elternbrief generieren: <em>„Verfasse einen sachlichen Elternbrief zu S4, der zum Gespräch einlädt."</em></li>
+                <li>Dasselbe mit <code>phi3:mini</code> und <code>llama3.1:8b</code> – wo sind die Qualitätsunterschiede?</li>
+                <li>Eigene anonymisierte Notizen aus Ihrem Schulalltag einsetzen und testen</li>
+            </ul>
+        </div>
+
+        <!-- Reflexion -->
+        <div class="box box-green">
+            <strong>🗣️ Reflexionsfragen für die Gruppe</strong>
+            <ul>
+                <li>Wann ist Pseudonymisierung ausreichend – und wann reicht sie nicht?</li>
+                <li>Könnte man aus den Kürzeln S1–S5 in einer echten Klasse Rückschlüsse auf Personen ziehen?</li>
+                <li>Welche Dokumente aus dem BBS-Alltag würden Sie einem lokalen LLM anvertrauen – und welche nicht?</li>
+                <li>Was bräuchte es in der Schule, damit dieses Vorgehen datenschutzkonform in den Alltag kommt?</li>
+            </ul>
+        </div>
+
+        <!-- Erwartetes Ergebnis -->
+        <div class="box box-blue">
+            <strong>✅ Erwartetes Ergebnis</strong>
+            <ul>
+                <li>Differenzierte, textlich brauchbare Entwürfe für Schülerrückmeldungen</li>
+                <li>Bewusstsein dafür, welche Daten lokal verarbeitet werden dürfen und welche nicht</li>
+                <li>Konkrete Erfahrung: Das Modell unterscheidet meist <em>nicht</em> selbst zwischen sicheren und unsicheren Eingaben</li>
+                <li>Gemeinsame Grundlage für die Diskussion: Pseudonymisierung als Voraussetzung für den LLM-Einsatz im Schulbetrieb</li>
+            </ul>
+        </div>
+
+    </div><!-- /page-body -->
+
+    <div class="page-footer">
+        <span>Workshop „Lokale LLMs in der Praxis" · Beispiel B</span>
+        <div style="display:flex; gap:1.5rem;">
+            <a href="beispiel-a.html">← Beispiel A</a>
+            <a href="beispiel-c.html">Beispiel C →</a>
+        </div>
+    </div>
+
+</div><!-- /page -->
+
+<script>
+    function copyCmd(btn, text) {
+        navigator.clipboard.writeText(text).then(() => {
+            btn.textContent = '✅ Kopiert!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '📋 Kopieren';
+                btn.classList.remove('copied');
+            }, 2200);
+        }).catch(() => {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.cssText = 'position:fixed;opacity:0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            btn.textContent = '✅ Kopiert!';
+            btn.classList.add('copied');
+            setTimeout(() => {
+                btn.textContent = '📋 Kopieren';
+                btn.classList.remove('copied');
+            }, 2200);
+        });
+    }
+</script>
+
+</body>
+</html>
